@@ -1,0 +1,8 @@
+@import 'tailwindcss';
+@import '@fontsource-variable/overpass';
+
+@layer base {
+  body {
+    font-family: 'Overpass Variable', sans-serif;
+  }
+}
