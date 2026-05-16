@@ -1,8 +1,167 @@
 @import 'tailwindcss';
-@import '@fontsource-variable/overpass';
+@import '@fontsource/bebas-neue';
+@import '@fontsource/titillium-web';
 
 @layer base {
   body {
-    font-family: 'Overpass Variable', sans-serif;
+    @apply bg-base text-primary font-body antialiased tracking-wide;
+  }
+
+  button {
+    @apply cursor-pointer;
+  }
+
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: var(--color-base);
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: var(--color-dark);
+    border: 2px solid var(--color-base);
+    border-radius: 10px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--color-bright);
+  }
+
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-dark) var(--color-base);
+  }
+}
+
+@theme {
+  --color-primary-50: #fff7ed;
+  --color-primary-100: #ffedd5;
+  --color-primary-500: #f9b116;
+  --color-primary-600: #eab60c;
+  --color-primary-700: #c2a10c;
+  --color-accent: #fbdb24;
+
+  --font-display: 'Bebas Neue', sans-serif;
+  --font-serif: 'Titillium Web', sans-serif;
+  --font-body: 'Titillium Web', sans-serif;
+
+  --color-base: #080b12;
+  --color-surface: #0f1420;
+  --color-card: #141926;
+  --color-elevated: #1a2135;
+
+  --color-dark: #1e2a42;
+  --color-bright: #2e3f5c;
+
+  --color-primary: #e8ecf4;
+  --color-muted: #8597b9;
+  --color-dim: #576381;
+
+  --color-gold: #e8b84b;
+  --color-gold-dim: #a07c28;
+  --color-gold-glow: rgba(232, 184, 75, 0.18);
+  --color-danger: #e84b4b;
+  --color-success: #4be884;
+  --color-info: #4b8fe8;
+
+  --tracking-widest2: 0.2em;
+
+  --radius-xl2: 20px;
+  --radius-xl3: 28px;
+
+  --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.45);
+  --shadow-glow: 0 0 40px rgba(232, 184, 75, 0.12);
+  --shadow-gold-sm: 0 4px 16px rgba(232, 185, 75, 0.205);
+  --shadow-gold-md: 0 6px 24px rgba(232, 185, 75, 0.37);
+
+  --background-image-hero-fade: linear-gradient(to top, #080b12 0%, rgba(8, 11, 18, 0.5) 50%, transparent 100%);
+  --background-image-hero-fade-right: linear-gradient(to right, #080b12 35%, transparent 100%);
+  --background-image-card-gradient: linear-gradient(135deg, #1a2135 0%, #141926 100%);
+
+  --animate-fade-in: fadeIn 0.3s ease;
+  --animate-slide-up: slideUp 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  --animate-slide-in-right: slideInRight 0.3s ease;
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+  @keyframes slideUp {
+    from {
+      opacity: 0;
+      transform: translateY(16px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  @keyframes slideInRight {
+    from {
+      opacity: 0;
+      transform: translateX(100%);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+}
+
+@layer components {
+  .font-display {
+    font-family: 'Bebas Neue', sans-serif;
+  }
+
+  .seat-shape {
+    @apply w-8 h-7 rounded-t-md cursor-pointer transition-all duration-200 relative;
+  }
+  .seat-shape::after {
+    content: '';
+    @apply absolute bottom-0 left-0.5 right-0.5 h-0.75 rounded-sm;
+    background: rgba(255, 255, 255, 0.05);
+  }
+  .seat-available {
+    @apply bg-elevated hover:-translate-y-px;
+  }
+  .seat-available:hover {
+    @apply bg-gold/20;
+  }
+  .seat-selected {
+    @apply bg-gold-dim;
+  }
+  .seat-taken {
+    @apply bg-surface opacity-40 cursor-not-allowed;
+  }
+  .seat-premium {
+    @apply bg-info;
+  }
+  .seat-premium:hover:not(.seat-taken) {
+    @apply bg-info/20;
+  }
+  .seat-premium.seat-selected {
+    @apply bg-blue-700;
+  }
+
+  .page-enter-active,
+  .page-leave-active {
+    transition:
+      opacity 0.22s ease,
+      transform 0.22s ease;
+  }
+  .page-enter-from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  .page-leave-to {
+    opacity: 0;
+    transform: translateY(-4px);
   }
 }

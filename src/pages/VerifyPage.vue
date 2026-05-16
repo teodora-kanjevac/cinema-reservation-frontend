@@ -1,0 +1,93 @@
+<template>
+  <div class="w-full max-w-105">
+    <div class="bg-card border border-dark rounded-xl3 p-10 shadow-card text-center">
+      <div class="text-5xl mb-4">📬</div>
+      <div
+        class="font-display text-2xl tracking-[0.12em] text-gold mb-6"
+        style="text-shadow: 0 0 16px rgba(160, 124, 40, 0.5)"
+      >
+        SNAP<span class="text-primary">SEAT</span>
+      </div>
+
+      <h2 class="font-display text-[26px] tracking-wide mb-2">Verify your email</h2>
+      <p class="text-sm text-muted mb-1">We sent a 6-digit code to</p>
+      <p class="text-[15px] font-semibold text-primary mb-6">
+        {{ 'your@email.com' }}
+      </p>
+
+      <CodeVerification ref="codeRef" :error="codeError" @complete="onComplete" @change="codeError = ''" />
+
+      <button
+        class="w-full py-3.5 rounded-xl text-[15px] font-semibold mb-4 transition-all duration-200"
+        :class="
+          verifyReady
+            ? 'bg-gold text-base shadow-gold-sm hover:bg-[#f0c85a] hover:-translate-y-px'
+            : 'bg-elevated text-dim border border-dark cursor-not-allowed'
+        "
+        :disabled="!verifyReady || loading"
+        @click="verify"
+      >
+        {{ loading ? 'Verifying…' : 'Verify & Continue →' }}
+      </button>
+
+      <div class="text-[13px] text-muted mb-4">
+        Didn't receive it?
+        <span v-if="countdown > 0" class="text-dim">Resend in {{ countdown }}s</span>
+        <button v-else class="text-gold font-semibold hover:underline" @click="resend">Resend code</button>
+      </div>
+
+      <router-link
+        to="/auth/signup"
+        class="block text-center text-[13px] text-muted border border-dark rounded-xl py-2.5 hover:border-bright hover:text-primary transition-all duration-200 no-underline"
+      >
+        ← Back to Sign Up
+      </router-link>
+    </div>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { ref, onMounted, onUnmounted } from 'vue'
+import { useRouter } from 'vue-router'
+import CodeVerification from '@/components/ui/CodeVerification.vue'
+
+const router = useRouter()
+
+const codeRef = ref<{ reset: () => void } | null>(null)
+const codeError = ref('')
+const verifyReady = ref(false)
+const loading = ref(false)
+const countdown = ref(30)
+let timer: number | undefined
+
+function startCountdown() {
+  countdown.value = 30
+  clearInterval(timer)
+  timer = setInterval(() => {
+    if (countdown.value > 0) countdown.value--
+    else clearInterval(timer)
+  }, 1000)
+}
+
+function onComplete(code: string | any[]) {
+  verifyReady.value = code.length === 6
+}
+
+async function verify() {
+  loading.value = true
+  await new Promise((r) => setTimeout(r, 800))
+//   authStore.login({ firstName: 'John', lastName: 'Snapseat', email: authStore.pendingEmail })
+  router.push({ name: 'home' })
+  loading.value = false
+}
+
+function resend() {
+  codeRef.value?.reset()
+  verifyReady.value = false
+  startCountdown()
+//   toast.success('New code sent!')
+}
+
+onMounted(startCountdown)
+onUnmounted(() => clearInterval(timer))
+</script>
