@@ -1,12 +1,14 @@
 <template>
   <div class="w-full max-w-105">
     <div class="bg-card border border-dark rounded-xl3 p-10 shadow-card text-center">
-      <div class="text-5xl mb-4">📬</div>
       <div
         class="font-display text-2xl tracking-[0.12em] text-gold mb-6"
         style="text-shadow: 0 0 16px rgba(160, 124, 40, 0.5)"
       >
-        SNAP<span class="text-primary">SEAT</span>
+        <div class="flex items-center justify-center gap-2">
+          <img class="w-8 mb-1" src="/images/logo.png" alt="Logo" />
+          <span>SNAP<span class="text-primary">SEAT</span></span>
+        </div>
       </div>
 
       <h2 class="font-display text-[26px] tracking-wide mb-2">Verify your email</h2>
@@ -18,7 +20,7 @@
       <CodeVerification ref="codeRef" :error="codeError" @complete="onComplete" @change="codeError = ''" />
 
       <button
-        class="w-full py-3.5 rounded-xl text-[15px] font-semibold mb-4 transition-all duration-200"
+        class="w-full py-3.5 rounded-xl text-[15px] font-semibold mb-4 transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-70 disabled:hover:translate-y-0"
         :class="
           verifyReady
             ? 'bg-gold text-base shadow-gold-sm hover:bg-[#f0c85a] hover:-translate-y-px'
@@ -27,7 +29,7 @@
         :disabled="!verifyReady || loading"
         @click="verify"
       >
-        {{ loading ? 'Verifying…' : 'Verify & Continue →' }}
+        {{ loading ? 'Verifying…' : 'Verify & Continue' }}
       </button>
 
       <div class="text-[13px] text-muted mb-4">
@@ -38,9 +40,9 @@
 
       <router-link
         to="/auth/signup"
-        class="block text-center text-[13px] text-muted border border-dark rounded-xl py-2.5 hover:border-bright hover:text-primary transition-all duration-200 no-underline"
+        class="flex items-center justify-center gap-1 w-full text-[13px] text-muted border border-dark rounded-xl py-2.5 hover:border-bright hover:text-primary transition-all duration-200 no-underline"
       >
-        ← Back to Sign Up
+        <ArrowRightIcon class="size-4 rotate-180 mt-0.5" /> Back to Sign Up
       </router-link>
     </div>
   </div>
@@ -50,6 +52,7 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import CodeVerification from '@/components/ui/CodeVerification.vue'
+import ArrowRightIcon from '@/components/icons/ArrowRightIcon.vue'
 
 const router = useRouter()
 
@@ -76,7 +79,7 @@ function onComplete(code: string | any[]) {
 async function verify() {
   loading.value = true
   await new Promise((r) => setTimeout(r, 800))
-//   authStore.login({ firstName: 'John', lastName: 'Snapseat', email: authStore.pendingEmail })
+  //   authStore.login({ firstName: 'John', lastName: 'Snapseat', email: authStore.pendingEmail })
   router.push({ name: 'home' })
   loading.value = false
 }
@@ -85,7 +88,7 @@ function resend() {
   codeRef.value?.reset()
   verifyReady.value = false
   startCountdown()
-//   toast.success('New code sent!')
+  //   toast.success('New code sent!')
 }
 
 onMounted(startCountdown)

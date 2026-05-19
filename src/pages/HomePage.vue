@@ -48,7 +48,7 @@
         <div class="flex gap-3 flex-wrap">
           <router-link
             :to="`/movie/${featured[heroIdx]?.id}`"
-            class="inline-flex items-center gap-2 px-8 py-3.5 rounded-xl text-[16px] font-semibold bg-gold text-base shadow-gold-sm hover:bg-gold/85 hover:shadow-gold-md hover:-translate-y-px transition-all duration-200 no-underline"
+            class="inline-flex items-center gap-2 px-8 py-3.5 rounded-xl text-[16px] font-semibold bg-gold text-base hover:bg-gold/85 hover:shadow-gold-sm hover:-translate-y-px transition-all duration-200 no-underline"
           >
             <TicketIcon class="size-5" />
             <span>Book Tickets</span>

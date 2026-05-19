@@ -23,7 +23,7 @@
             <input
               v-model="form.firstName"
               type="text"
-              placeholder="John"
+              placeholder="Your first name"
               class="bg-elevated border border-dark text-primary rounded-lg px-3.5 py-2.75 text-[14.5px] font-body outline-none transition-all duration-200 placeholder:text-dim focus:border-gold/70"
             />
           </div>
@@ -32,7 +32,7 @@
             <input
               v-model="form.lastName"
               type="text"
-              placeholder="Doe"
+              placeholder="Your last name"
               class="bg-elevated border border-dark text-primary rounded-lg px-3.5 py-2.75 text-[14.5px] font-body outline-none transition-all duration-200 placeholder:text-dim focus:border-gold/70"
             />
           </div>
@@ -59,7 +59,7 @@
             <input
               v-model="form.phone"
               type="tel"
-              placeholder="+1 555 000 0000"
+              placeholder="+381 61 234 5678"
               class="w-full bg-elevated border border-dark text-primary rounded-lg pl-10 pr-4 py-2.75 text-[14.5px] font-body outline-none transition-all duration-200 placeholder:text-dim focus:border-gold/70"
             />
           </div>
@@ -68,19 +68,21 @@
         <div class="flex flex-col gap-1.5">
           <label class="text-[12.5px] font-semibold text-muted uppercase tracking-[0.08em]">Password</label>
           <div class="relative">
-            <LockIcon class="size-4 -mt-0.5 absolute left-3.5 top-1/2 -translate-y-1/2 text-dim text-sm pointer-events-none" />
+            <LockIcon
+              class="size-4 -mt-0.5 absolute left-3.5 top-1/2 -translate-y-1/2 text-dim text-sm pointer-events-none"
+            />
             <input
               v-model="form.password"
               :type="showPass ? 'text' : 'password'"
-              placeholder="Min. 8 characters"
+              placeholder="Min. 6 characters"
               class="w-full bg-elevated border border-dark text-primary rounded-lg pl-10 pr-10 py-2.75 text-[14.5px] font-body outline-none transition-all duration-200 placeholder:text-dim focus:border-gold/70"
             />
             <button
               type="button"
-              class="absolute right-3.5 top-1/2 -translate-y-1/2 text-dim hover:text-muted"
+              class="absolute right-3.5 top-1/2 -translate-y-1/2 p-1 hover:bg-dim/20 rounded-md text-dim hover:text-muted transition"
               @click="showPass = !showPass"
             >
-              <i :class="showPass ? 'pi pi-eye-slash' : 'pi pi-eye'" class="text-sm" />
+              <EyeIcon class="size-5" />
             </button>
           </div>
 
@@ -99,17 +101,24 @@
 
         <div class="flex flex-col gap-1.5">
           <label class="text-[12.5px] font-semibold text-muted uppercase tracking-[0.08em]">Confirm Password</label>
-          <input
-            v-model="form.confirm"
-            type="password"
-            placeholder="Repeat password"
-            class="bg-elevated border text-primary rounded-lg px-3.5 py-2.75 text-[14.5px] font-body outline-none transition-all duration-200 placeholder:text-dim"
-            :class="
-              form.confirm && form.confirm !== form.password
-                ? 'border-danger focus:border-danger'
-                : 'border-dark focus:border-gold/70'
-            "
-          />
+          <div class="relative">
+            <LockIcon
+              class="size-4 -mt-0.5 absolute left-3.5 top-1/2 -translate-y-1/2 text-dim text-sm pointer-events-none"
+            />
+            <input
+              v-model="form.confirm"
+              :type="showConfirm ? 'text' : 'password'"
+              placeholder="Repeat password"
+              class="w-full bg-elevated border border-dark text-primary rounded-lg pl-10 pr-10 py-2.75 text-[14.5px] font-body outline-none transition-all duration-200 placeholder:text-dim focus:border-gold/70"
+            />
+            <button
+              type="button"
+              class="absolute right-3.5 top-1/2 -translate-y-1/2 p-1 hover:bg-dim/20 rounded-md text-dim hover:text-muted transition"
+              @click="showConfirm = !showConfirm"
+            >
+              <EyeIcon class="size-5" />
+            </button>
+          </div>
           <p v-if="form.confirm && form.confirm !== form.password" class="text-[12px] text-danger">
             Passwords do not match
           </p>
@@ -117,21 +126,23 @@
 
         <label class="flex gap-2.5 items-start text-[13px] text-muted cursor-pointer mt-1">
           <input v-model="agreed" type="checkbox" class="mt-0.5 accent-gold shrink-0" />
-          I agree to the
-          <a class="text-gold hover:underline cursor-pointer">Terms of Service</a>
-          and
-          <a class="text-gold hover:underline cursor-pointer">Privacy Policy</a>
+          <div class="flex gap-1 items-start">
+            I agree to the
+            <a class="text-gold hover:underline cursor-pointer">Terms of Service</a>
+            and
+            <a class="text-gold hover:underline cursor-pointer">Privacy Policy</a>
+          </div>
         </label>
 
         <p v-if="error" class="text-sm text-danger">{{ error }}</p>
 
         <button
           type="submit"
-          class="w-full py-3.5 rounded-xl text-[15px] font-semibold mt-1 transition-all duration-200"
+          class="w-full border py-3.5 rounded-xl text-[15px] font-semibold mt-1 transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-70 disabled:hover:translate-y-0"
           :class="
             agreed
-              ? 'bg-gold text-base shadow-gold-sm hover:bg-[#f0c85a] hover:shadow-gold-md hover:-translate-y-px'
-              : 'bg-elevated text-dim border border-dark cursor-not-allowed'
+              ? 'bg-gold border-gold text-base hover:border-[#f0c85a] hover:bg-[#f0c85a] hover:shadow-gold-sm hover:-translate-y-px'
+              : 'bg-elevated text-dim border-dark cursor-not-allowed'
           "
           :disabled="!agreed || loading"
         >
@@ -149,6 +160,7 @@
 
 <script setup lang="ts">
 import EmailIcon from '@/components/icons/EmailIcon.vue'
+import EyeIcon from '@/components/icons/EyeIcon.vue'
 import LockIcon from '@/components/icons/LockIcon.vue'
 import PhoneIcon from '@/components/icons/PhoneIcon.vue'
 import { ref, reactive, computed } from 'vue'
@@ -159,6 +171,7 @@ const router = useRouter()
 const form = reactive({ firstName: '', lastName: '', email: '', phone: '', password: '', confirm: '' })
 const agreed = ref(false)
 const showPass = ref(false)
+const showConfirm = ref(false)
 const loading = ref(false)
 const error = ref('')
 
@@ -166,7 +179,7 @@ const strength = computed(() => {
   const p = form.password
   if (!p) return 0
   let s = 0
-  if (p.length >= 8) s++
+  if (p.length >= 6) s++
   if (/[A-Z]/.test(p)) s++
   if (/[0-9]/.test(p)) s++
   if (/[^A-Za-z0-9]/.test(p)) s++

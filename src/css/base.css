@@ -138,13 +138,13 @@
     @apply bg-gold-dim;
   }
   .seat-taken {
-    @apply bg-surface opacity-40 cursor-not-allowed;
+    @apply bg-surface opacity-50 cursor-not-allowed;
   }
   .seat-premium {
     @apply bg-info;
   }
   .seat-premium:hover:not(.seat-taken) {
-    @apply bg-info/20;
+    @apply bg-info/50;
   }
   .seat-premium.seat-selected {
     @apply bg-blue-700;

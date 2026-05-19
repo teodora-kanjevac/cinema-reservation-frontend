@@ -45,13 +45,13 @@
       <template v-if="!isLoggedIn">
         <router-link
           to="/auth/login"
-          class="text-[13px] font-semibold text-muted px-4 py-2 rounded border border-dark hover:text-text-primary hover:border-bright hover:bg-elevated transition-all duration-200"
+          class="flex items-center gap-1 text-[13px] font-semibold text-muted px-4 py-2 rounded border border-dark hover:text-text-primary hover:border-bright hover:bg-elevated transition-all duration-200"
         >
-          Log In
+          <LogInIcon class="size-4 -ms-1"/> Log In
         </router-link>
         <router-link
           to="/auth/signup"
-          class="text-[13px] font-semibold text-base bg-gold px-4 py-2 rounded shadow-gold-sm hover:bg-[#f0c85a] hover:shadow-gold-md hover:-translate-y-px transition-all duration-200"
+          class="text-[13px] font-semibold text-base bg-gold px-4 py-2 rounded hover:bg-[#f0c85a] hover:shadow-gold-sm hover:-translate-y-px transition-all duration-200"
         >
           Join Free
         </router-link>
@@ -74,6 +74,7 @@ import { ref } from 'vue'
 import SearchIcon from '../icons/SearchIcon.vue'
 import TicketIcon from '../icons/TicketIcon.vue'
 import CartIcon from '../icons/CartIcon.vue'
+import LogInIcon from '../icons/LogInIcon.vue'
 
 const isLoggedIn = ref(false)
 

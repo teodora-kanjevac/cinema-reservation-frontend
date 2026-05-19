@@ -73,9 +73,9 @@ function seatClass(seat: Seat, ri: any, ci: any) {
 }
 
 const legend = [
-  { label: 'Available', style: 'background:#1a2135;border-color:#1e2a42' },
-  { label: 'Selected', style: 'background:#e8b84b;border-color:#a07c28' },
-  { label: 'Taken', style: 'background:#0f1420;border-color:#1e2a42;opacity:0.4' },
-  { label: 'Premium', style: 'background:#1a2135;border-color:#4b8fe8' },
+  { label: 'Available', style: 'background:#2d3a5d;border-color:#26314f' },
+  { label: 'Selected', style: 'background:#a07c28;border-color:#886920' },
+  { label: 'Taken', style: 'background:#0f1420;border-color:#26314f;opacity:0.5' },
+  { label: 'Premium', style: 'background:#4b8fe8;border-color:#4583d3' },
 ]
 </script>

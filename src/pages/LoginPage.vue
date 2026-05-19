@@ -60,10 +60,10 @@
 
         <button
           type="submit"
-          class="w-full py-3.5 rounded-xl text-[15px] font-semibold mt-1 bg-gold text-base shadow-gold-sm hover:bg-[#f0c85a] hover:shadow-gold-md hover:-translate-y-px transition-all duration-200"
+          class="w-full py-3.5 rounded-xl text-[15px] font-semibold mt-1 bg-gold text-base hover:bg-[#f0c85a] hover:shadow-gold-sm hover:-translate-y-px transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-70 disabled:hover:translate-y-0"
           :disabled="loading"
         >
-          {{ loading ? 'Signing in…' : 'Sign In →' }}
+          {{ loading ? 'Logging in…' : 'Log In' }}
         </button>
       </form>
 

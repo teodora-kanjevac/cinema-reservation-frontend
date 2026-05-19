@@ -63,7 +63,9 @@
 
       <div class="border-t border-dark pt-5 flex flex-col sm:flex-row justify-between items-center gap-3">
         <p class="text-[12.5px] text-dim">© 2026 SnapSeat. All rights reserved.</p>
-        <p class="text-[12.5px] text-dim">Made with ❤︎ by Teodora Kanjevac</p>
+        <p class="text-[12.5px] text-dim inline-flex items-center gap-1">
+          Made with <HeartIcon class="size-3 -mt-0.5" /> by Teodora Kanjevac
+        </p>
       </div>
     </div>
   </footer>
@@ -71,6 +73,7 @@
 
 <script setup lang="ts">
 import FacebookIcon from '../icons/FacebookIcon.vue'
+import HeartIcon from '../icons/HeartIcon.vue'
 import InstagramIcon from '../icons/InstagramIcon.vue'
 import YoutubeIcon from '../icons/YoutubeIcon.vue'
 

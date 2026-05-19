@@ -30,9 +30,9 @@
               >{{ g }}</span
             >
             <span
-              class="px-2.5 py-0.5 rounded-full text-[11.5px] font-semibold tracking-wide bg-gold/15 text-gold border border-gold/30"
+              class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11.5px] font-semibold tracking-wide bg-gold/15 text-gold border border-gold/30"
             >
-              ⭐ {{ movie.rating }}
+              <StarIcon class="size-4 -mb-0.5" /> {{ movie.rating }}
             </span>
           </div>
 
@@ -45,9 +45,9 @@
 
           <div class="flex items-center gap-3 flex-wrap mb-4">
             <span class="text-sm text-muted">{{ movie.year }}</span>
-            <span class="w-1 h-1 rounded-full bg-text-dim" />
+            <span class="size-1 rounded-full bg-dim" />
             <span class="text-sm text-muted">{{ movie.duration }}</span>
-            <span class="w-1 h-1 rounded-full bg-text-dim" />
+            <span class="size-1 rounded-full bg-dim" />
             <span
               class="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-info/12 text-[#7ab3f0] border border-info/25"
             >
@@ -73,14 +73,16 @@
           <div class="flex gap-2.5">
             <a
               href="#screenings"
-              class="inline-flex items-center gap-2 px-8 py-3.5 rounded-xl text-[15px] font-semibold bg-gold text-base shadow-gold-sm hover:bg-[#f0c85a] hover:shadow-gold-md hover:-translate-y-px transition-all duration-200 no-underline"
+              class="inline-flex items-center gap-2 px-8 py-3.5 rounded-xl text-[15px] font-semibold bg-gold text-base hover:bg-[#f0c85a] hover:shadow-gold-sm hover:-translate-y-px transition-all duration-200 no-underline"
             >
-              🎫 Book Now
+              <TicketIcon class="size-5" />
+              <span>Book Tickets</span>
             </a>
             <button
-              class="px-8 py-3.5 rounded-xl text-[15px] font-semibold text-primary bg-elevated border border-bright hover:border-gold hover:text-gold transition-all duration-200"
+              class="inline-flex items-center gap-2 px-8 py-3.5 rounded-xl text-[15px] font-semibold text-primary bg-elevated border border-bright hover:border-gold hover:text-gold transition-all duration-200"
             >
-              ❤ Wishlist
+              <HeartIcon class="size-4.5" />
+              <span>Wishlist</span>
             </button>
           </div>
         </div>
@@ -95,9 +97,7 @@
           v-for="(d, i) in SCREENING_DATES"
           :key="i"
           class="shrink-0 text-center px-4 py-2.5 rounded-xl border transition-all duration-200"
-          :class="
-            selectedDate === i ? 'border-gold bg-gold/10 text-gold' : 'border-dark bg-card hover:border-bright'
-          "
+          :class="selectedDate === i ? 'border-gold bg-gold/10 text-gold' : 'border-dark bg-card hover:border-bright'"
           @click="selectedDate = i"
         >
           <span
@@ -117,9 +117,7 @@
         <div class="flex items-center gap-2 text-sm font-semibold text-muted mb-3">
           <span class="w-0.75 h-3.5 rounded-sm bg-gold shrink-0" />
           {{ cinema.name }}
-          <span
-            class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-elevated text-dim border border-dark"
-          >
+          <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-elevated text-dim border border-dark">
             {{ cinema.distance }}
           </span>
         </div>
@@ -154,10 +152,12 @@
 
             <div class="w-65 bg-card border border-dark rounded-2xl p-6 shrink-0">
               <h3 class="font-display text-lg tracking-wide mb-4">BOOKING SUMMARY</h3>
-              <p class="text-[13.5px] text-muted mb-1">🎬 {{ movie.title }}</p>
+              <p class="text-[13.5px] text-muted mb-1 inline-flex items-center gap-1.5">
+                <ClapperboardIcon class="size-3.5 -mt-0.5" /> {{ movie.title }}
+              </p>
               <p class="text-[13px] text-dim mb-4">{{ selectedCinema?.name }} · {{ selectedTimeObj?.t }}</p>
 
-              <div class="h-px bg-border mb-4" />
+              <div class="h-px bg-dark mb-4" />
 
               <p v-if="!selectedSeats.length" class="text-[13.5px] text-dim text-center py-3">No seats selected</p>
               <div v-for="s in selectedSeats" :key="s.label" class="flex justify-between text-[13.5px] mb-2">
@@ -165,23 +165,23 @@
                 <span class="text-gold font-semibold">€{{ s.price }}</span>
               </div>
 
-              <div class="h-px bg-border my-3" />
+              <div class="h-px bg-dark my-3" />
               <div class="flex justify-between items-center text-[15px] font-bold mb-5">
                 <span>Total</span>
-                <span class="font-display text-[22px] text-gold tracking-wide"> €{{ totalPrice() }} </span>
+                <span class="font-display text-[22px] text-gold tracking-wider"> €{{ totalPrice() }} </span>
               </div>
 
               <button
                 class="w-full py-3 rounded-xl text-sm font-semibold transition-all duration-200"
                 :class="
                   selectedSeats.length
-                    ? 'bg-gold text-base shadow-gold-sm hover:bg-[#f0c85a] hover:-translate-y-px'
+                    ? 'bg-gold text-base hover:shadow-gold-sm hover:bg-[#f0c85a] hover:-translate-y-px'
                     : 'bg-elevated text-dim border border-dark cursor-not-allowed'
                 "
                 :disabled="!selectedSeats.length"
                 @click="addToCart"
               >
-                Add to Cart 🛒
+                <span class="inline-flex items-center gap-2"><CartIcon class="size-4" />Add to Cart</span>
               </button>
             </div>
           </div>
@@ -192,10 +192,10 @@
     </section>
   </div>
 
-  <div v-else class="flex flex-col items-center justify-center py-32 text-center">
-    <span class="text-5xl mb-4 opacity-40">🎬</span>
-    <h2 class="text-xl font-semibold text-muted mb-2">Movie not found</h2>
-    <router-link to="/" class="text-gold text-sm hover:underline no-underline">← Back to home</router-link>
+  <div v-else class="flex flex-col items-center justify-center pt-72 pb-32 text-center">
+    <span class="mb-6 opacity-40"><NoMovieIcon class="size-20"/></span>
+    <h2 class="text-xl font-semibold text-muted mb-3">Movie not found</h2>
+    <router-link to="/" class="flex items-center gap-1 text-gold text-sm hover:underline no-underline">Back to home <ArrowRightIcon class="size-4"/></router-link>
   </div>
 </template>
 
@@ -205,6 +205,13 @@ import { useRoute } from 'vue-router'
 import { MOVIES, CINEMAS, SCREENING_DATES } from '@/data/movie'
 import { useSeatMap } from '@/composables/useSeatMap.js'
 import SeatMap from '@/components/ui/SeatMap.vue'
+import StarIcon from '@/components/icons/StarIcon.vue'
+import TicketIcon from '@/components/icons/TicketIcon.vue'
+import HeartIcon from '@/components/icons/HeartIcon.vue'
+import ClapperboardIcon from '@/components/icons/ClapperboardIcon.vue'
+import CartIcon from '@/components/icons/CartIcon.vue'
+import ArrowRightIcon from '@/components/icons/ArrowRightIcon.vue'
+import NoMovieIcon from '@/components/icons/NoMovieIcon.vue'
 
 const route = useRoute()
 
@@ -229,16 +236,16 @@ function selectTime(cinema: any, time: any) {
 
 function addToCart() {
   if (!selectedSeats.value.length) return
-//   cartStore.addItem({
-//     movie: movie.value,
-//     cinema: selectedCinema.value.name,
-//     date: `${SCREENING_DATES[selectedDate.value].name} ${SCREENING_DATES[selectedDate.value].num}`,
-//     time: selectedTimeObj.value.t,
-//     type: selectedTimeObj.value.type,
-//     seats: [...selectedSeats.value],
-//     total: totalPrice(),
-//   })
-//   toast.success(`${selectedSeats.value.length} ticket(s) added to cart!`)
+  //   cartStore.addItem({
+  //     movie: movie.value,
+  //     cinema: selectedCinema.value.name,
+  //     date: `${SCREENING_DATES[selectedDate.value].name} ${SCREENING_DATES[selectedDate.value].num}`,
+  //     time: selectedTimeObj.value.t,
+  //     type: selectedTimeObj.value.type,
+  //     seats: [...selectedSeats.value],
+  //     total: totalPrice(),
+  //   })
+  //   toast.success(`${selectedSeats.value.length} ticket(s) added to cart!`)
   buildMap()
   selectedTimeKey.value = ''
 }

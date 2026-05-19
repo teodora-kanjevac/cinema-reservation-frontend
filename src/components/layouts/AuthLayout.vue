@@ -11,6 +11,7 @@
         class="inline-flex items-center gap-2 text-sm text-text-muted hover:text-gold transition-colors duration-200"
       >
         <i class="pi pi-arrow-left text-xs" />
+        <ArrowRightIcon class="size-5 rotate-180" />
         Back to SnapSeat
       </router-link>
     </div>
@@ -20,3 +21,7 @@
     </div>
   </div>
 </template>
+
+<script setup lang="ts">
+import ArrowRightIcon from '../icons/ArrowRightIcon.vue'
+</script>

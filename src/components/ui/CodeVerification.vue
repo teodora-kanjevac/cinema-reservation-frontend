@@ -13,7 +13,7 @@
         :class="
           digits[i]
             ? 'border-gold bg-gold/10'
-            : 'border-dark focus:border-gold focus:shadow-[0_0_0_3px_rgba(232,184,75,0.18)]'
+            : 'border-dark focus:border-gold/70'
         "
         @input="onInput(i, $event)"
         @keydown="onKeydown(i, $event)"

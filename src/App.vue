@@ -1,8 +1,8 @@
 <template>
-  <div class="min-h-screen flex flex-col bg-base text-white relative">
+  <div class=" flex flex-col bg-base text-white relative">
     <NavBar v-if="route.meta.layout === 'default'" />
 
-    <main class="flex-1 flex flex-col">
+    <main class="min-h-screen flex-1 flex flex-col">
       <router-view v-slot="{ Component, route: currentRoute }">
         <transition name="page" mode="out-in">
           <component :is="Component" :key="currentRoute.path" />

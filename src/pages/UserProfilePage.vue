@@ -14,20 +14,18 @@
               TK
             </div>
             <button
-              class="absolute bottom-0 right-0 size-7 rounded-full bg-elevated border-2 border-card flex items-center justify-center text-[12px] text-muted hover:text-gold transition-colors duration-200"
+              class="absolute bottom-0 right-0 size-7 rounded-full bg-dark border-2 border-card flex items-center justify-center text-[12px] text-muted hover:text-gold transition-colors duration-200"
             >
-              <i class="pi pi-pencil" />
+              <PenIcon class="size-4" />
             </button>
           </div>
-          <p class="text-[16px] font-semibold text-primary mb-0.5">
-            Teodora Kanjevac
-          </p>
+          <p class="text-[16px] font-semibold text-primary mb-0.5">Teodora Kanjevac</p>
           <p class="text-[13px] text-muted">kanjevac03@gmail.com</p>
           <div class="mt-3">
             <span
-              class="px-2.5 py-1 rounded-full text-[11.5px] font-semibold tracking-wide bg-gold/15 text-gold border border-gold/30"
+              class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11.5px] font-semibold tracking-wide bg-gold/15 text-gold border border-gold/30"
             >
-              ⭐ Premium Member
+              <StarIcon class="size-4 mt-px" /> Premium Member
             </span>
           </div>
         </div>
@@ -37,24 +35,20 @@
             v-for="item in navItems"
             :key="item.tab"
             class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-[14px] font-medium transition-all duration-200 text-left"
-            :class="
-              activeTab === item.tab
-                ? 'bg-gold/10 text-gold'
-                : 'text-muted hover:bg-elevated hover:text-primary'
-            "
+            :class="activeTab === item.tab ? 'bg-gold/10 text-gold' : 'text-muted hover:bg-elevated hover:text-primary'"
             @click="activeTab = item.tab"
           >
-            <i :class="item.icon" class="text-base w-5 text-center" />
+            <component :is="item.icon" class="size-5" />
             {{ item.label }}
           </button>
 
-          <div class="h-px bg-border mx-1 my-2.5" />
+          <div class="h-px bg-dark mx-1 my-2.5" />
 
           <button
             class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-[14px] font-medium text-danger hover:bg-danger/10 transition-all duration-200 text-left"
             @click="logout"
           >
-            <i class="pi pi-sign-out text-base w-5 text-center" />
+            <LogoutIcon class="size-5 mt-0.5" />
             Sign Out
           </button>
         </nav>
@@ -65,11 +59,7 @@
           <div class="bg-card border border-dark rounded-2xl p-7">
             <h2 class="text-[16px] font-semibold mb-5 flex items-center gap-2.5"><span>📊</span> Your Stats</h2>
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div
-                v-for="s in stats"
-                :key="s.label"
-                class="bg-elevated border border-dark rounded-xl p-4 text-center"
-              >
+              <div v-for="s in stats" :key="s.label" class="bg-elevated border border-dark rounded-xl p-4 text-center">
                 <div class="font-display text-[32px] text-gold tracking-wide leading-none mb-1">{{ s.value }}</div>
                 <div class="text-[12px] text-muted uppercase tracking-[0.06em]">{{ s.label }}</div>
               </div>
@@ -80,10 +70,10 @@
             <h2 class="text-[16px] font-semibold mb-5 flex items-center gap-2.5"><span>🕐</span> Recent Bookings</h2>
             <BookingItem v-for="b in bookings.slice(0, 3)" :key="b.movie" :booking="b" />
             <button
-              class="mt-3 text-sm text-muted border border-dark rounded-lg px-4 py-2 hover:border-bright hover:text-primary transition-all duration-200"
+              class="flex items-center gap-1 mt-3 text-sm text-muted border border-dark rounded-lg px-4 py-2 hover:border-bright hover:text-primary transition-all duration-200"
               @click="activeTab = 'bookings'"
             >
-              View All Bookings →
+              View All Bookings <ArrowRightIcon class="size-5" />
             </button>
           </div>
         </template>
@@ -212,17 +202,26 @@ import { MOVIES } from '@/data/movie.ts'
 import MovieCard from '@/components/ui/MovieCard.vue'
 import BookingItem from '@/components/ui/BookingItem.vue'
 import FieldInput from '@/components/ui/FieldInput.vue'
+import ArrowRightIcon from '@/components/icons/ArrowRightIcon.vue'
+import StarIcon from '@/components/icons/StarIcon.vue'
+import PenIcon from '@/components/icons/PenIcon.vue'
+import LogoutIcon from '@/components/icons/LogoutIcon.vue'
+import HomeIcon from '@/components/icons/HomeIcon.vue'
+import TicketIcon from '@/components/icons/TicketIcon.vue'
+import HeartIcon from '@/components/icons/HeartIcon.vue'
+import CreditCard from '@/components/icons/CreditCard.vue'
+import SettingsIcon from '@/components/icons/SettingsIcon.vue'
 
 const router = useRouter()
 
 const activeTab = ref('overview')
 
 const navItems = [
-  { tab: 'overview', icon: 'pi pi-chart-bar', label: 'Overview' },
-  { tab: 'bookings', icon: 'pi pi-ticket', label: 'My Bookings' },
-  { tab: 'settings', icon: 'pi pi-cog', label: 'Settings' },
-  { tab: 'payment', icon: 'pi pi-credit-card', label: 'Payment Methods' },
-  { tab: 'wishlist', icon: 'pi pi-heart', label: 'Wishlist' },
+  { tab: 'overview', icon: HomeIcon, label: 'Overview' },
+  { tab: 'bookings', icon: TicketIcon, label: 'My Bookings' },
+  { tab: 'settings', icon: SettingsIcon, label: 'Settings' },
+  { tab: 'payment', icon: CreditCard, label: 'Payment Methods' },
+  { tab: 'wishlist', icon: HeartIcon, label: 'Wishlist' },
 ]
 
 const stats = [
@@ -289,9 +288,8 @@ const paymentCards = [
 const wishlist = [MOVIES[1], MOVIES[4], MOVIES[5], MOVIES[7]]
 
 function logout() {
-//   authStore.logout()
-//   toast.success('Signed out successfully')
+  //   authStore.logout()
+  //   toast.success('Signed out successfully')
   router.push({ name: 'home' })
 }
-
 </script>
