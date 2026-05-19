@@ -14,7 +14,7 @@
         <div
           class="size-11 rounded-full bg-gold/90 flex items-center justify-center text-xl text-base transform scale-90 group-hover:scale-100 transition-all duration-200"
         >
-          <EyeIcon class="size-6"/>
+          <EyeIcon class="size-6" />
         </div>
       </div>
 
@@ -24,9 +24,9 @@
         <div class="flex items-center gap-1"><StarIcon class="size-4" /> {{ movie.rating }}</div>
       </span>
 
-      <div v-if="movie.release" class="absolute inset-0 bg-base/40 flex items-end p-3">
+      <div v-if="movie.releaseDate" class="absolute inset-0 bg-base/40 flex items-end p-3">
         <span class="tag-muted text-xs font-bold tracking-widest">
-          {{ movie.release }}
+          {{ dayjs(movie.releaseDate).year() }}
         </span>
       </div>
     </div>
@@ -36,18 +36,26 @@
         {{ movie.title }}
       </h3>
       <p class="text-[12.5px] text-muted">
-        {{ movie.genres ? movie.genres[0] : '' }}
+        {{ genres }}
         <span v-if="movie.duration"> · {{ movie.duration }}</span>
       </p>
     </div>
   </router-link>
 </template>
 
-<script setup>
-import EyeIcon from '../icons/EyeIcon.vue';
+<script setup lang="ts">
+import dayjs from 'dayjs'
+import EyeIcon from '../icons/EyeIcon.vue'
 import StarIcon from '../icons/StarIcon.vue'
+import type { Movie } from '@/types/Movie'
+import { computed } from 'vue'
 
-defineProps({
-  movie: { type: Object, required: true },
+const props = defineProps<{ movie: Movie }>()
+
+const genres = computed(() => {
+  const genres = props.movie.genres
+  if (!genres || genres.length === 0) return 'No genres'
+
+  return genres.map((g) => g.name).join(', ')
 })
 </script>
