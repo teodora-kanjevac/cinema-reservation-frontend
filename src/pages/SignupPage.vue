@@ -23,6 +23,7 @@
             <input
               v-model="form.firstName"
               type="text"
+              autocomplete="given-name"
               placeholder="Your first name"
               class="bg-elevated border border-dark text-primary rounded-lg px-3.5 py-2.75 text-[14.5px] font-body outline-none transition-all duration-200 placeholder:text-dim focus:border-gold/70"
             />
@@ -32,6 +33,7 @@
             <input
               v-model="form.lastName"
               type="text"
+              autocomplete="family-name"
               placeholder="Your last name"
               class="bg-elevated border border-dark text-primary rounded-lg px-3.5 py-2.75 text-[14.5px] font-body outline-none transition-all duration-200 placeholder:text-dim focus:border-gold/70"
             />
@@ -53,15 +55,34 @@
         </div>
 
         <div class="flex flex-col gap-1.5">
-          <label class="text-[12.5px] font-semibold text-muted uppercase tracking-[0.08em]">Phone Number</label>
-          <div class="relative">
-            <PhoneIcon class="size-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-dim text-sm pointer-events-none" />
-            <input
-              v-model="form.phone"
-              type="tel"
-              placeholder="+381 61 234 5678"
-              class="w-full bg-elevated border border-dark text-primary rounded-lg pl-10 pr-4 py-2.75 text-[14.5px] font-body outline-none transition-all duration-200 placeholder:text-dim focus:border-gold/70"
-            />
+          <label class="text-[12.5px] font-semibold text-muted uppercase tracking-[0.08em]">Gender</label>
+          <div class="grid grid-cols-2 gap-3">
+            <label
+              class="flex items-center gap-3 bg-elevated border text-primary rounded-lg px-4 py-2.75 text-[14.5px] font-body cursor-pointer transition-all duration-200 select-none"
+              :class="form.gender === 'm' ? 'border-gold/70 bg-gold/5' : 'border-dark hover:border-dim/50'"
+            >
+              <input
+                v-model="form.gender"
+                type="radio"
+                value="m"
+                name="gender"
+                class="accent-gold size-4 pointer-events-none"
+              />
+              <span>Male</span>
+            </label>
+            <label
+              class="flex items-center gap-3 bg-elevated border text-primary rounded-lg px-4 py-2.75 text-[14.5px] font-body cursor-pointer transition-all duration-200 select-none"
+              :class="form.gender === 'f' ? 'border-gold/70 bg-gold/5' : 'border-dark hover:border-dim/50'"
+            >
+              <input
+                v-model="form.gender"
+                type="radio"
+                value="f"
+                name="gender"
+                class="accent-gold size-4 pointer-events-none"
+              />
+              <span>Female</span>
+            </label>
           </div>
         </div>
 
@@ -134,7 +155,7 @@
           </div>
         </label>
 
-        <p v-if="error" class="text-sm text-danger">{{ error }}</p>
+        <p v-if="errorMessage" class="text-sm text-danger">{{ errorMessage }}</p>
 
         <button
           type="submit"
@@ -162,18 +183,26 @@
 import EmailIcon from '@/components/icons/EmailIcon.vue'
 import EyeIcon from '@/components/icons/EyeIcon.vue'
 import LockIcon from '@/components/icons/LockIcon.vue'
-import PhoneIcon from '@/components/icons/PhoneIcon.vue'
 import { ref, reactive, computed } from 'vue'
 import { useRouter } from 'vue-router'
+import { authService } from '@/services/authService'
+import type { RegisterPayload } from '@/types/Register'
 
 const router = useRouter()
 
-const form = reactive({ firstName: '', lastName: '', email: '', phone: '', password: '', confirm: '' })
+const form = reactive<RegisterPayload & { confirm: string }>({
+  firstName: '',
+  lastName: '',
+  email: '',
+  gender: 'm',
+  password: '',
+  confirm: '',
+})
 const agreed = ref(false)
 const showPass = ref(false)
 const showConfirm = ref(false)
 const loading = ref(false)
-const error = ref('')
+const errorMessage = ref('')
 
 const strength = computed(() => {
   const p = form.password
@@ -194,21 +223,39 @@ const strengthLabel = computed(() => {
   return ['Weak', 'Fair', 'Good', 'Strong'][strength.value - 1] || 'Weak'
 })
 
-async function submit() {
-  error.value = ''
-  if (!form.email || !form.firstName || !form.password) {
-    error.value = 'Please fill in all fields.'
+const submit = async () => {
+  errorMessage.value = ''
+  if (!form.email || !form.firstName || !form.lastName || !form.password || !form.gender) {
+    errorMessage.value = 'Please fill in all fields.'
     return
   }
   if (form.password !== form.confirm) {
-    error.value = 'Passwords do not match.'
+    errorMessage.value = 'Passwords do not match.'
     return
   }
 
   loading.value = true
-  //   authStore.setPendingEmail(form.email)
-  await new Promise((r) => setTimeout(r, 600))
-  loading.value = false
-  router.push({ name: 'verify' })
+  try {
+    const registerPayload: RegisterPayload = {
+      firstName: form.firstName,
+      lastName: form.lastName,
+      email: form.email,
+      gender: form.gender,
+      password: form.password,
+    }
+
+    await authService.register(registerPayload)
+
+    localStorage.setItem('pendingEmail', form.email)
+    router.push({ name: 'verify' })
+  } catch (error: any) {
+    if (error.code === 'EMAIL_IN_USE') {
+      errorMessage.value = 'User with this email already exists.'
+    } else {
+      errorMessage.value = 'Registeration failed. Please try again later.'
+    }
+  } finally {
+    loading.value = false
+  }
 }
 </script>

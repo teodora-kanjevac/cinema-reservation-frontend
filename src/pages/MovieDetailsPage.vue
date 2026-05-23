@@ -1,9 +1,13 @@
 <template>
-  <div class="pt-17" v-if="movie">
-    <section class="relative h-120 overflow-hidden">
+  <div v-if="isLoading" class="flex flex-col items-center justify-center py-32">
+    <Spinner />
+    <p class="mt-4 text-sm text-gold tracking-wider uppercase font-semibold">Loading Movie Details...</p>
+  </div>
+  <div v-else-if="movie">
+    <section class="relative min-h-120 flex items-center">
       <div
-        class="absolute inset-0 bg-cover bg-center scale-105"
-        :style="{ backgroundImage: `url(${movie.backdrop})`, filter: 'blur(3px) brightness(0.25)' }"
+        class="absolute inset-1 bg-cover bg-center"
+        :style="{ backgroundImage: `url(${movie.poster})`, filter: 'blur(3px) brightness(0.25)' }"
       />
       <div
         class="absolute inset-0 pointer-events-none"
@@ -14,72 +18,62 @@
         "
       />
 
-      <div class="relative z-10 max-w-7xl mx-auto px-8 h-full flex items-end pb-12 gap-12">
+      <div class="relative z-10 max-w-7xl mx-auto px-8 w-full flex flex-col sm:flex-row items-start pt-32 pb-16 gap-12">
         <div
-          class="hidden sm:block w-52.5 shrink-0 rounded-2xl overflow-hidden border border-bright shadow-[0_20px_60px_rgba(0,0,0,0.7)]"
+          class="hidden sm:block w-56 shrink-0 rounded-2xl overflow-hidden border border-bright shadow-[0_20px_60px_rgba(0,0,0,0.7)]"
         >
           <img :src="movie.poster" :alt="movie.title" class="w-full block" />
         </div>
 
-        <div class="flex-1 pb-1">
+        <div class="flex-1 w-full">
           <div class="flex gap-2 mb-3 flex-wrap">
             <span
-              v-for="g in movie.genres"
-              :key="g"
+              v-for="genre in movie.genres"
+              :key="genre.id"
               class="px-2.5 py-0.5 rounded-full text-[11.5px] font-semibold tracking-wide bg-elevated text-muted border border-dark"
-              >{{ g }}</span
             >
-            <span
-              class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11.5px] font-semibold tracking-wide bg-gold/15 text-gold border border-gold/30"
-            >
-              <StarIcon class="size-4 -mb-0.5" /> {{ movie.rating }}
+              {{ genre.name }}
             </span>
           </div>
 
           <h1
-            class="font-display text-[clamp(32px,4vw,56px)] leading-none tracking-wider mb-3"
-            style="text-shadow: 0 2px 16px rgba(0, 0, 0, 0.5)"
+            class="font-display text-[clamp(32px,4vw,52px)] font-medium leading-tight tracking-wider mb-3 text-white"
+            style="text-shadow: 0 2px 16px rgba(0, 0, 0, 0.6)"
           >
             {{ movie.title }}
           </h1>
 
           <div class="flex items-center gap-3 flex-wrap mb-4">
-            <span class="text-sm text-muted">{{ movie.year }}</span>
+            <span v-if="movie.releaseDate" class="text-sm text-muted">{{ dayjs(movie.releaseDate).year() }}</span>
             <span class="size-1 rounded-full bg-dim" />
-            <span class="text-sm text-muted">{{ movie.duration }}</span>
-            <span class="size-1 rounded-full bg-dim" />
-            <span
-              class="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-info/12 text-[#7ab3f0] border border-info/25"
-            >
-              PG-13
-            </span>
+            <span v-if="movie.runTime" class="text-sm text-muted">{{ convertMinutesToHours(movie.runTime) }}</span>
           </div>
 
-          <p class="text-[15px] text-muted leading-[1.75] max-w-145 mb-5">
+          <p class="text-[15px] text-muted leading-relaxed mb-6 max-w-3xl">
             {{ movie.description }}
           </p>
 
-          <div class="flex gap-8 mb-7">
+          <div class="flex flex-wrap gap-x-12 gap-y-4 mb-8">
             <div>
               <label class="text-[11px] uppercase tracking-widest text-dim block mb-1">Director</label>
-              <span class="text-sm text-primary font-medium">{{ movie.director }}</span>
+              <span class="text-sm text-primary font-medium">{{ movie.director.name }}</span>
             </div>
-            <div>
+            <div class="max-w-md">
               <label class="text-[11px] uppercase tracking-widest text-dim block mb-1">Cast</label>
-              <span class="text-sm text-primary font-medium">{{ movie.cast }}</span>
+              <span class="text-sm text-primary font-medium line-clamp-2">{{ actors }}</span>
             </div>
           </div>
 
-          <div class="flex gap-2.5">
+          <div class="flex gap-3 flex-wrap">
             <a
               href="#screenings"
-              class="inline-flex items-center gap-2 px-8 py-3.5 rounded-xl text-[15px] font-semibold bg-gold text-base hover:bg-[#f0c85a] hover:shadow-gold-sm hover:-translate-y-px transition-all duration-200 no-underline"
+              class="inline-flex items-center gap-2 px-8 py-3.5 rounded-xl text-[15px] font-semibold bg-gold text-base hover:bg-[#f0c85a] hover:shadow-gold-sm hover:-translate-y-px transition-all duration-200 no-underline cursor-pointer"
             >
               <TicketIcon class="size-5" />
               <span>Book Tickets</span>
             </a>
             <button
-              class="inline-flex items-center gap-2 px-8 py-3.5 rounded-xl text-[15px] font-semibold text-primary bg-elevated border border-bright hover:border-gold hover:text-gold transition-all duration-200"
+              class="inline-flex items-center gap-2 px-8 py-3.5 rounded-xl text-[15px] font-semibold text-primary bg-elevated border border-bright hover:border-gold hover:text-gold transition-all duration-200 cursor-pointer"
             >
               <HeartIcon class="size-4.5" />
               <span>Wishlist</span>
@@ -193,16 +187,18 @@
   </div>
 
   <div v-else class="flex flex-col items-center justify-center pt-72 pb-32 text-center">
-    <span class="mb-6 opacity-40"><NoMovieIcon class="size-20"/></span>
+    <span class="mb-6 opacity-40"><NoMovieIcon class="size-20" /></span>
     <h2 class="text-xl font-semibold text-muted mb-3">Movie not found</h2>
-    <router-link to="/" class="flex items-center gap-1 text-gold text-sm hover:underline no-underline">Back to home <ArrowRightIcon class="size-4"/></router-link>
+    <router-link to="/" class="flex items-center gap-1 text-gold text-sm hover:underline no-underline"
+      >Back to home <ArrowRightIcon class="size-4"
+    /></router-link>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
-import { MOVIES, CINEMAS, SCREENING_DATES } from '@/data/movie'
+import { CINEMAS, SCREENING_DATES } from '@/data/movie'
 import { useSeatMap } from '@/composables/useSeatMap.js'
 import SeatMap from '@/components/ui/SeatMap.vue'
 import StarIcon from '@/components/icons/StarIcon.vue'
@@ -212,17 +208,42 @@ import ClapperboardIcon from '@/components/icons/ClapperboardIcon.vue'
 import CartIcon from '@/components/icons/CartIcon.vue'
 import ArrowRightIcon from '@/components/icons/ArrowRightIcon.vue'
 import NoMovieIcon from '@/components/icons/NoMovieIcon.vue'
+import type { Movie } from '@/types/Movie'
+import { movieService } from '@/services/movieService'
+import { convertMinutesToHours } from '@/utils/time'
+import dayjs from 'dayjs'
+import Spinner from '@/components/ui/Spinner.vue'
 
 const route = useRoute()
 
-const movie = computed(() => MOVIES.find((m: any) => m.id === Number(route.params.id)))
-
+const movie = ref<Movie>()
+const isLoading = ref(true)
 const selectedDate = ref(0)
 const selectedTimeKey = ref('')
 const selectedCinema = ref<any | null>(null)
 const selectedTimeObj = ref<any | null>(null)
 
 const { seatMap, selectedSeats, buildMap, isSelected, toggleSeat, totalPrice } = useSeatMap()
+
+onMounted(async () => {
+  try {
+    isLoading.value = true
+    const movieData = await movieService.getMovieById(route.params.id as string)
+    movie.value = movieData
+  } catch (error) {
+    console.error('Failed to connect to backend api:', error)
+  } finally {
+    isLoading.value = false
+  }
+})
+
+const actors = computed(() => {
+  if (!movie.value) return
+  const actors = movie.value?.actors
+  if (!actors || actors.length === 0) return 'No actors'
+
+  return actors.map((a) => a.name).join(', ')
+})
 
 function selectTime(cinema: any, time: any) {
   selectedTimeKey.value = cinema.name + time.t

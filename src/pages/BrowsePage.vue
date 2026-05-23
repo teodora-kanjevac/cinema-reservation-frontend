@@ -2,21 +2,14 @@
   <div>
     <SearchBar
       v-model="searchQuery"
-      :genres="GENRES"
-      :active-genre="activeGenre"
-      @genre="toggleGenre"
-      class="sticky! top-0!"
+      :show-genres="false"
+      class="sticky! top-20!"
     />
 
-    <section class="max-w-7xl mx-auto px-8 pt-6 pb-12">
-      <div v-if="isLoading" class="flex flex-col items-center justify-center py-32">
-        <ProgressSpinner
-          style="width: 50px; height: 50px"
-          strokeWidth="4"
-          animationDuration=".5s"
-          aria-label="Loading movies"
-        />
-        <p class="mt-4 text-sm text-gold tracking-wider uppercase font-semibold">Loading Movies...</p>
+    <section class="max-w-7xl mx-auto px-8 pt-24 pb-12">
+      <div v-if="isLoading" class="flex flex-col items-center justify-center pt-56 pb-32">
+        <Spinner />
+        <p class="mt-8 text-sm text-gold tracking-wider uppercase font-semibold">Loading Movies...</p>
       </div>
 
       <div v-else>
@@ -71,13 +64,12 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
-import { GENRES } from '@/data/movie'
 import SearchBar from '@/components/ui/SearchBar.vue'
 import MovieCard from '@/components/ui/MovieCard.vue'
-import ProgressSpinner from 'primevue/progressspinner'
 import type { Genre, Movie } from '@/types/Movie'
 import { movieService } from '@/services/movieService'
 import NoMovieIcon from '@/components/icons/NoMovieIcon.vue'
+import Spinner from '@/components/ui/Spinner.vue'
 
 const movies = ref<Movie[]>([])
 const genres = ref<Genre[]>([])
@@ -104,11 +96,9 @@ const filteredMovies = computed(() => {
     const matchQ =
       !q ||
       m.title.toLowerCase().includes(q) ||
-      m.director.toLowerCase().includes(q) ||
+      m.director.name.toLowerCase().includes(q) ||
       m.genres.some((g) => g.name.toLowerCase().includes(q))
-    const matchG =
-      !activeGenre.value ||
-      m.genres.some((g) => g.name === activeGenre.value)
+    const matchG = !activeGenre.value || m.genres.some((g) => g.name === activeGenre.value)
     return matchQ && matchG
   })
 })

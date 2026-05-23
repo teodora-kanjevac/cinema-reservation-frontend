@@ -3,14 +3,14 @@
     <section class="relative h-155 flex items-end overflow-hidden">
       <div
         class="absolute inset-0 bg-cover bg-center transition-all duration-700"
-        :style="{ backgroundImage: `url(${featured[heroIdx]?.backdrop})`, filter: 'brightness(0.32) saturate(0.8)' }"
+        :style="{ backgroundImage: `url(${featured[heroIdx]?.poster})`, filter: 'brightness(0.32) saturate(0.8)' }"
       />
       <div
         class="absolute inset-0 pointer-events-none"
         style="background: linear-gradient(to top, #080b12 0%, rgba(8, 11, 18, 0.5) 50%, transparent 100%)"
       />
 
-      <div class="relative z-10 max-w-150 px-12 pb-14 animate-slide-up">
+      <div class="relative z-10 px-12 pb-14 animate-slide-up">
         <div
           class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-gold/15 text-gold border border-gold/30 mb-3.5 tracking-widest"
         >
@@ -26,22 +26,12 @@
         </h1>
 
         <div class="flex items-center gap-4 flex-wrap mb-5">
-          <div class="flex gap-0.5">
-            <StarIcon
-              v-for="i in 5"
-              :key="i"
-              class="size-4"
-              :class="i <= Math.round((Number(featured[heroIdx]?.rating) || 0) / 2) ? 'text-gold' : 'text-bright'"
-            />
-          </div>
-          <span class="text-[13.5px] text-muted">{{ featured[heroIdx]?.rating }}/10</span>
+          <span class="text-[13.5px] text-muted">{{ convertMinutesToHours(featured[heroIdx]?.runTime) }}</span>
           <span class="size-1 rounded-full bg-dim" />
-          <span class="text-[13.5px] text-muted">{{ featured[heroIdx]?.duration }}</span>
-          <span class="size-1 rounded-full bg-dim" />
-          <span class="text-[13.5px] text-muted">{{ featured[heroIdx]?.year }}</span>
+          <span class="text-[13.5px] text-muted">{{}}{{ dayjs(featured[heroIdx]?.releaseDate).year() }}</span>
         </div>
 
-        <p class="text-[15px] text-muted leading-[1.75] mb-7 max-w-125">
+        <p class="text-[15px] text-muted leading-[1.75] mb-7 max-w-3xl line-clamp-3">
           {{ featured[heroIdx]?.description }}
         </p>
 
@@ -75,7 +65,8 @@
 
     <SearchBar
       v-model="searchQuery"
-      :genres="GENRES"
+      :show-genres="true"
+      :genres="genres.slice(0, 6).map((g) => g.name)"
       :active-genre="activeGenre"
       @genre="toggleGenre"
       @search="goToBrowse"
@@ -94,7 +85,7 @@
       </div>
 
       <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-5">
-        <MovieCard v-for="m in filteredMovies.slice(0, 6)" :key="m.id" :movie="m" />
+        <MovieCard v-for="movie in filteredMovies.slice(0, 6)" :key="movie.id" :movie="movie" />
       </div>
 
       <div class="flex items-center justify-between mt-14 mb-6">
@@ -102,7 +93,7 @@
       </div>
 
       <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-5 pb-8">
-        <MovieCard v-for="m in COMING_SOON" :key="m.id" :movie="m" />
+        <MovieCard v-for="movie in comingSoon" :key="movie.id" :movie="movie" />
       </div>
     </section>
   </div>
@@ -111,31 +102,48 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { MOVIES, COMING_SOON, GENRES } from '@/data/movie'
 import SearchBar from '@/components/ui/SearchBar.vue'
 import MovieCard from '@/components/ui/MovieCard.vue'
 import ClapperboardIcon from '@/components/icons/ClapperboardIcon.vue'
-import StarIcon from '@/components/icons/StarIcon.vue'
 import TicketIcon from '@/components/icons/TicketIcon.vue'
 import PlayIcon from '@/components/icons/PlayIcon.vue'
 import ArrowRightIcon from '@/components/icons/ArrowRightIcon.vue'
+import { movieService } from '@/services/movieService'
+import type { Genre, Movie } from '@/types/Movie'
+import { convertMinutesToHours } from '@/utils/time'
+import dayjs from 'dayjs'
 
 const router = useRouter()
 
 const heroIdx = ref(0)
 const searchQuery = ref('')
 const activeGenre = ref('')
+const isLoading = ref(true)
+const movies = ref<Movie[]>([])
+const genres = ref<Genre[]>([])
 
-const featured = [MOVIES[0], MOVIES[2], MOVIES[7]]
+const featured = computed(() => [movies.value[0], movies.value[5], movies.value[12]].filter(Boolean))
 
 const filteredMovies = computed(() =>
-  MOVIES.filter((m: any) => {
+  movies.value.filter((m: Movie) => {
     const q = searchQuery.value.toLowerCase()
-    const matchQ = !q || m.title.toLowerCase().includes(q) || m.director.toLowerCase().includes(q)
-    const matchG = !activeGenre.value || m.genres.includes(activeGenre.value)
+    const matchQ = !q || m.title.toLowerCase().includes(q) || m.director.name.toLowerCase().includes(q)
+    const matchG = !activeGenre.value || m.genres.some((g: Genre) => g.name === activeGenre.value)
     return matchQ && matchG
   }),
 )
+
+const comingSoon = computed(() => {
+  if (!movies.value.length) return []
+
+  return [...movies.value]
+    .sort((a, b) => {
+      const dateA = dayjs(a.releaseDate)
+      const dateB = dayjs(b.releaseDate)
+      return dateB.isAfter(dateA) ? 1 : -1
+    })
+    .slice(0, 4)
+})
 
 function toggleGenre(g: string) {
   activeGenre.value = activeGenre.value === g ? '' : g
@@ -146,9 +154,19 @@ function goToBrowse() {
 }
 
 let timer: any
-onMounted(() => {
+onMounted(async () => {
+  try {
+    isLoading.value = true
+    const [moviesData, genresData] = await Promise.all([movieService.getAllMovies(), movieService.getGenres()])
+    movies.value = moviesData
+    genres.value = genresData
+  } catch (error) {
+    console.error('Failed to connect to backend api:', error)
+  } finally {
+    isLoading.value = false
+  }
   timer = setInterval(() => {
-    heroIdx.value = (heroIdx.value + 1) % featured.length
+    heroIdx.value = (heroIdx.value + 1) % featured.value.length
   }, 5000)
 })
 onUnmounted(() => clearInterval(timer))

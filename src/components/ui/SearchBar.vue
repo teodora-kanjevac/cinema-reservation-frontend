@@ -13,7 +13,7 @@
         />
       </div>
 
-      <div class="flex items-center gap-2 flex-wrap">
+      <div v-if="showGenres" class="flex items-center gap-2 flex-wrap">
         <button
           v-for="genre in genres"
           :key="genre"
@@ -39,6 +39,7 @@ import SearchIcon from '../icons/SearchIcon.vue'
 defineProps({
   modelValue: { type: String, default: '' },
   placeholder: { type: String, default: 'Search movies, directors, genres…' },
+  showGenres: { type: Boolean, default: false },
   genres: { type: Array as PropType<string[]>, default: () => [] as string[] },
   activeGenre: { type: String, default: '' },
 })

@@ -23,7 +23,7 @@
             <EmailIcon class="size-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-dim text-sm pointer-events-none" />
             <input
               v-model="form.email"
-              type="email"
+              type="text"
               placeholder="you@example.com"
               autocomplete="email"
               class="w-full bg-elevated border border-dark text-primary rounded-lg pl-10 pr-4 py-2.75 text-[14.5px] font-body outline-none transition-all duration-200 placeholder:text-dim focus:border-gold/70"
@@ -47,7 +47,7 @@
               class="absolute right-3.5 top-1/2 -translate-y-1/2 text-dim hover:text-muted transition-colors"
               @click="showPass = !showPass"
             >
-              <i :class="showPass ? 'pi pi-eye-slash' : 'pi pi-eye'" class="text-sm" />
+              <EyeIcon class="size-5" />
             </button>
           </div>
         </div>
@@ -56,7 +56,7 @@
           <a class="text-[13px] text-gold cursor-pointer hover:underline">Forgot password?</a>
         </div>
 
-        <p v-if="error" class="text-sm text-danger -mt-1">{{ error }}</p>
+        <p v-if="errorMessage" class="text-sm text-danger -mt-1">{{ errorMessage }}</p>
 
         <button
           type="submit"
@@ -79,7 +79,9 @@
 
 <script setup lang="ts">
 import EmailIcon from '@/components/icons/EmailIcon.vue'
+import EyeIcon from '@/components/icons/EyeIcon.vue'
 import LockIcon from '@/components/icons/LockIcon.vue'
+import { authService } from '@/services/authService'
 import { ref, reactive } from 'vue'
 import { useRouter } from 'vue-router'
 
@@ -88,20 +90,27 @@ const router = useRouter()
 const form = reactive({ email: '', password: '' })
 const showPass = ref(false)
 const loading = ref(false)
-const error = ref('')
+const errorMessage = ref('')
 
-async function submit() {
-  error.value = ''
+const submit = async () => {
+  errorMessage.value = ''
   if (!form.email || !form.password) {
-    error.value = 'Please fill in all fields.'
+    errorMessage.value = 'Please fill in all fields.'
     return
   }
 
   loading.value = true
-  await new Promise((r) => setTimeout(r, 800)) // simulate request
-
-  //   authStore.login({ firstName: 'John', lastName: 'Snapseat', email: form.email })
-  router.push({ name: 'home' })
-  loading.value = false
+  try {
+    await authService.login(form.email, form.password)
+    router.push('/')
+  } catch (error: any) {
+    if (error.code === 'INVALID_CREDENTIALS') {
+      errorMessage.value = 'Incorrect email or password.'
+    } else {
+      errorMessage.value = 'Log in failed. Please try again later.'
+    }
+  } finally {
+    loading.value = false
+  }
 }
 </script>

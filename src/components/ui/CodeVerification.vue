@@ -8,6 +8,7 @@
         v-model="digits[i]"
         type="text"
         inputmode="numeric"
+        autocomplete="off"
         maxlength="1"
         class="w-13 h-15 rounded-xl text-center text-[28px] font-display tracking-widest bg-elevated border-2 text-primary outline-none caret-gold transition-all duration-200"
         :class="
@@ -21,7 +22,7 @@
       />
     </div>
 
-    <p v-if="error" class="text-center text-sm text-danger mb-3">{{ error }}</p>
+    <p v-if="error" class="text-sm text-danger mb-6">{{ error }}</p>
   </div>
 </template>
 
@@ -35,10 +36,13 @@ const props = defineProps({
 const emit = defineEmits(['complete', 'change'])
 
 const digits = ref(['', '', '', '', '', ''])
+const isResetting = ref(false)
 
 watch(
   digits,
   (val) => {
+    if (isResetting.value) return
+
     const code = val.join('')
     emit('change', code)
     if (code.length === 6 && val.every((d) => d !== '')) {
@@ -83,8 +87,14 @@ function onPaste(e: ClipboardEvent) {
 }
 
 function reset() {
+  isResetting.value = true
+  
   digits.value = ['', '', '', '', '', '']
   document.getElementById('code-0')?.focus()
+
+  setTimeout(() => {
+    isResetting.value = false
+  }, 0)
 }
 
 defineExpose({ reset })

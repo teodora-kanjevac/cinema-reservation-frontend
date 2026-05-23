@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen max-w-275 mx-auto px-8 py-12 pt-32">
+  <div class="min-h-screen w-6xl mx-auto px-8 py-12 pt-32">
     <div class="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-7 items-start">
       <aside class="bg-card border border-dark rounded-2xl overflow-hidden lg:sticky lg:top-22.5">
         <div
@@ -11,16 +11,17 @@
               class="size-20 rounded-full border-[3px] border-card flex items-center justify-center font-display text-[32px] text-base"
               style="background: linear-gradient(135deg, #a07c28, #e8b84b)"
             >
-              TK
+              {{ userInitials }}
             </div>
             <button
+              @click="activeTab = 'settings'"
               class="absolute bottom-0 right-0 size-7 rounded-full bg-dark border-2 border-card flex items-center justify-center text-[12px] text-muted hover:text-gold transition-colors duration-200"
             >
               <PenIcon class="size-4" />
             </button>
           </div>
-          <p class="text-[16px] font-semibold text-primary mb-0.5">Teodora Kanjevac</p>
-          <p class="text-[13px] text-muted">kanjevac03@gmail.com</p>
+          <p class="text-[16px] font-semibold text-primary mb-0.5">{{ user?.firstName }} {{ user?.lastName }}</p>
+          <p class="text-[13px] text-muted">{{ user?.email }}</p>
           <div class="mt-3">
             <span
               class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11.5px] font-semibold tracking-wide bg-gold/15 text-gold border border-gold/30"
@@ -80,7 +81,9 @@
 
         <template v-if="activeTab === 'bookings'">
           <div class="bg-card border border-dark rounded-2xl p-7">
-            <h2 class="text-[16px] font-semibold mb-5 flex items-center gap-2.5"><span>🎟️</span> All Bookings</h2>
+            <h2 class="text-[16px] font-semibold mb-5 flex items-center gap-2.5">
+              <TicketIcon class="size-5" /> All Bookings
+            </h2>
             <BookingItem v-for="b in bookings" :key="b.movie + b.date" :booking="b" show-download />
           </div>
         </template>
@@ -88,7 +91,7 @@
         <template v-if="activeTab === 'settings'">
           <div class="bg-card border border-dark rounded-2xl p-7">
             <h2 class="text-[16px] font-semibold mb-5 flex items-center gap-2.5">
-              <span>👤</span> Personal Information
+              <PersonIcon class="size-5.5"/> Personal Information
             </h2>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-5">
               <FieldInput label="First Name" :value="'t'" />
@@ -150,7 +153,9 @@
 
         <template v-if="activeTab === 'payment'">
           <div class="bg-card border border-dark rounded-2xl p-7">
-            <h2 class="text-[16px] font-semibold mb-5 flex items-center gap-2.5"><span>💳</span> Payment Methods</h2>
+            <h2 class="text-[16px] font-semibold mb-5 flex items-center gap-2.5">
+              <CreditCard class="size-5" /> Payment Methods
+            </h2>
             <div class="flex flex-col gap-3 mb-5">
               <div
                 v-for="card in paymentCards"
@@ -184,10 +189,10 @@
 
         <template v-if="activeTab === 'wishlist'">
           <div class="bg-card border border-dark rounded-2xl p-7">
-            <h2 class="text-[16px] font-semibold mb-5 flex items-center gap-2.5"><span>❤️</span> Wishlist</h2>
-            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-              <MovieCard v-for="m in wishlist" :movie="m" />
-            </div>
+            <h2 class="text-[16px] font-semibold mb-5 flex items-center gap-2.5">
+              <HeartIcon class="size-5" /> Wishlist
+            </h2>
+            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4"></div>
           </div>
         </template>
       </div>
@@ -196,7 +201,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive } from 'vue'
+import { ref, reactive, onMounted, onBeforeUnmount, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { MOVIES } from '@/data/movie.ts'
 import MovieCard from '@/components/ui/MovieCard.vue'
@@ -211,10 +216,14 @@ import TicketIcon from '@/components/icons/TicketIcon.vue'
 import HeartIcon from '@/components/icons/HeartIcon.vue'
 import CreditCard from '@/components/icons/CreditCard.vue'
 import SettingsIcon from '@/components/icons/SettingsIcon.vue'
+import { authService } from '@/services/authService'
+import PersonIcon from '@/components/icons/PersonIcon.vue'
 
 const router = useRouter()
 
 const activeTab = ref('overview')
+const isLoggedIn = ref(false)
+const user = ref<any | null>(null)
 
 const navItems = [
   { tab: 'overview', icon: HomeIcon, label: 'Overview' },
@@ -285,11 +294,36 @@ const paymentCards = [
   { icon: '🟠', name: 'Mastercard', last4: '8888', exp: '09/26', default: false },
 ]
 
-const wishlist = [MOVIES[1], MOVIES[4], MOVIES[5], MOVIES[7]]
+const userInitials = computed(() => {
+  if (!user.value || !user.value.firstName) return 'N/A'
+  const first = user.value.firstName.charAt(0)
+  const last = user.value.lastName ? user.value.lastName.charAt(0) : ''
+  return (first + last).toUpperCase()
+})
 
-function logout() {
-  //   authStore.logout()
-  //   toast.success('Signed out successfully')
-  router.push({ name: 'home' })
+function syncAuthState() {
+  isLoggedIn.value = authService.isAuthenticated()
+  user.value = authService.getCurrentUser()
+
+  if (!isLoggedIn.value && router.currentRoute.value.name === 'profile') router.push('/')
 }
+
+async function logout() {
+  await authService.logout()
+  window.dispatchEvent(new Event('auth-change'))
+
+  router.push('/')
+}
+
+onMounted(() => {
+  syncAuthState()
+
+  window.addEventListener('auth-change', syncAuthState)
+  window.addEventListener('storage', syncAuthState)
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('auth-change', syncAuthState)
+  window.removeEventListener('storage', syncAuthState)
+})
 </script>

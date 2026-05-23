@@ -1,6 +1,6 @@
 <template>
   <router-link :to="`/movie/${movie.id}`" class="group block no-underline">
-    <div class="relative overflow-hidden rounded-xl bg-elevated" style="aspect-ratio: 2/3">
+    <div class="relative overflow-hidden rounded-xl" style="aspect-ratio: 2/3">
       <img
         :src="movie.poster"
         :alt="movie.title"
@@ -19,12 +19,13 @@
       </div>
 
       <span
-        class="absolute top-2.5 right-2.5 px-1.5 py-0.5 rounded text-xs font-bold text-gold bg-base/75 backdrop-blur-sm border border-gold/30"
+        v-if="movie.releaseDate"
+        class="absolute bottom-2.5 right-2.5 px-1.5 py-0.5 rounded text-xs font-bold text-primary/90 bg-base/75 border border-dim/80"
       >
-        <div class="flex items-center gap-1"><StarIcon class="size-4" /> {{ movie.rating }}</div>
+        <div class="flex items-center gap-1">{{ dayjs(movie.releaseDate).year() }}</div>
       </span>
 
-      <div v-if="movie.releaseDate" class="absolute inset-0 bg-base/40 flex items-end p-3">
+      <div v-if="movie.releaseDate">
         <span class="tag-muted text-xs font-bold tracking-widest">
           {{ dayjs(movie.releaseDate).year() }}
         </span>
@@ -37,7 +38,7 @@
       </h3>
       <p class="text-[12.5px] text-muted">
         {{ genres }}
-        <span v-if="movie.duration"> · {{ movie.duration }}</span>
+        <span v-if="movie.runTime"> · {{ convertMinutesToHours(movie.runTime) }}</span>
       </p>
     </div>
   </router-link>
@@ -46,9 +47,9 @@
 <script setup lang="ts">
 import dayjs from 'dayjs'
 import EyeIcon from '../icons/EyeIcon.vue'
-import StarIcon from '../icons/StarIcon.vue'
 import type { Movie } from '@/types/Movie'
 import { computed } from 'vue'
+import { convertMinutesToHours } from '@/utils/time'
 
 const props = defineProps<{ movie: Movie }>()
 

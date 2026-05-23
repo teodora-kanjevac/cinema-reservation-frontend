@@ -14,7 +14,7 @@
       <h2 class="font-display text-[26px] tracking-wide mb-2">Verify your email</h2>
       <p class="text-sm text-muted mb-1">We sent a 6-digit code to</p>
       <p class="text-[15px] font-semibold text-primary mb-6">
-        {{ 'your@email.com' }}
+        {{ emailAddress }}
       </p>
 
       <CodeVerification ref="codeRef" :error="codeError" @complete="onComplete" @change="codeError = ''" />
@@ -49,10 +49,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import CodeVerification from '@/components/ui/CodeVerification.vue'
 import ArrowRightIcon from '@/components/icons/ArrowRightIcon.vue'
+import { authService } from '@/services/authService'
+import client from '@/config/api'
 
 const router = useRouter()
 
@@ -60,37 +62,62 @@ const codeRef = ref<{ reset: () => void } | null>(null)
 const codeError = ref('')
 const verifyReady = ref(false)
 const loading = ref(false)
-const countdown = ref(30)
-let timer: number | undefined
+const countdown = ref(0)
+const emailAddress = ref(localStorage.getItem('pendingEmail') || '-')
+const typedCode = ref('')
+let timer: any
 
 function startCountdown() {
-  countdown.value = 30
   clearInterval(timer)
+  countdown.value = 30
+
   timer = setInterval(() => {
     if (countdown.value > 0) countdown.value--
     else clearInterval(timer)
   }, 1000)
 }
 
-function onComplete(code: string | any[]) {
+function onComplete(code: string) {
+  typedCode.value = code
   verifyReady.value = code.length === 6
 }
 
-async function verify() {
+const verify = async () => {
   loading.value = true
-  await new Promise((r) => setTimeout(r, 800))
-  //   authStore.login({ firstName: 'John', lastName: 'Snapseat', email: authStore.pendingEmail })
-  router.push({ name: 'home' })
-  loading.value = false
+  codeError.value = ''
+
+  try {
+    await authService.verifyCode(emailAddress.value, typedCode.value)
+    localStorage.removeItem('pendingEmail')
+
+    router.push('/')
+  } catch (error: any) {
+    if (error.code === 'INVALID_CREDENTIALS') {
+      codeError.value = 'Invalid verification code.'
+    } else if (error.code === 'VALIDATION_FAILED') {
+      codeError.value = 'Verification code expired. Resend the code using the link below.'
+    } else {
+      codeError.value = 'Verification failed. Please try again later.'
+    }
+    verifyReady.value = false
+    codeRef.value?.reset()
+  } finally {
+    loading.value = false
+  }
 }
 
-function resend() {
-  codeRef.value?.reset()
-  verifyReady.value = false
-  startCountdown()
-  //   toast.success('New code sent!')
+const resend = async () => {
+  codeError.value = ''
+  try {
+    await client.post('/auth/resend-code', { email: emailAddress.value })
+
+    codeRef.value?.reset()
+    verifyReady.value = false
+    startCountdown()
+  } catch (err: any) {
+    codeError.value = 'Failed to resend code.'
+  }
 }
 
-onMounted(startCountdown)
 onUnmounted(() => clearInterval(timer))
 </script>
