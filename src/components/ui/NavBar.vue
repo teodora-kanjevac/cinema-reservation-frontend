@@ -40,6 +40,13 @@
         title="Cart"
       >
         <CartIcon class="size-5" />
+
+        <span
+          v-if="cartItemsCount > 0"
+          class="absolute -top-1.5 -right-1.5 min-w-4.5 h-4.5 px-1 bg-gold text-base text-[10px] font-bold rounded-full flex items-center justify-center border border-base animate-in zoom-in duration-200"
+        >
+          {{ cartItemsCount }}
+        </span>
       </router-link>
 
       <template v-if="!isLoggedIn">
@@ -70,14 +77,16 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import SearchIcon from '../icons/SearchIcon.vue'
 import CartIcon from '../icons/CartIcon.vue'
 import LogInIcon from '../icons/LogInIcon.vue'
 import { authService } from '@/services/authService'
+import { invoiceService } from '@/services/invoiceService'
 
 const isLoggedIn = ref(false)
 const user = ref<any | null>(null)
+const cartItemsCount = ref<number>(0)
 
 const navLinks = [
   { to: '/', label: 'Now Showing' },
@@ -91,20 +100,40 @@ const userInitials = computed(() => {
   return (first + last).toUpperCase()
 })
 
+async function fetchCartItemCount() {
+  if (!isLoggedIn.value) {
+    cartItemsCount.value = 0
+    return
+  }
+
+  cartItemsCount.value = await invoiceService.getItemCountInCart()
+}
+
 function syncAuthState() {
   isLoggedIn.value = authService.isAuthenticated()
   user.value = authService.getCurrentUser()
+  fetchCartItemCount()
 }
+
+watch(isLoggedIn, (loggedIn) => {
+  if (loggedIn) {
+    fetchCartItemCount()
+  } else {
+    cartItemsCount.value = 0
+  }
+})
 
 onMounted(() => {
   syncAuthState()
 
   window.addEventListener('auth-change', syncAuthState)
+  window.addEventListener('cart-change', fetchCartItemCount)
   window.addEventListener('storage', syncAuthState)
 })
 
 onBeforeUnmount(() => {
   window.removeEventListener('auth-change', syncAuthState)
+  window.removeEventListener('cart-change', fetchCartItemCount)
   window.removeEventListener('storage', syncAuthState)
 })
 </script>

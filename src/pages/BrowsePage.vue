@@ -7,7 +7,7 @@
     />
 
     <section class="max-w-7xl mx-auto px-8 pt-24 pb-12">
-      <div v-if="isLoading" class="flex flex-col items-center justify-center pt-56 pb-32">
+      <div v-if="loading" class="flex flex-col items-center justify-center pt-56 pb-32">
         <Spinner />
         <p class="mt-8 text-sm text-gold tracking-wider uppercase font-semibold">Loading Movies...</p>
       </div>
@@ -75,18 +75,18 @@ const movies = ref<Movie[]>([])
 const genres = ref<Genre[]>([])
 const searchQuery = ref('')
 const activeGenre = ref('')
-const isLoading = ref(true)
+const loading = ref(true)
 
 onMounted(async () => {
   try {
-    isLoading.value = true
+    loading.value = true
     const [moviesData, genresData] = await Promise.all([movieService.getAllMovies(), movieService.getGenres()])
     movies.value = moviesData
     genres.value = genresData
   } catch (error) {
     console.error('Failed to connect to backend api:', error)
   } finally {
-    isLoading.value = false
+    loading.value = false
   }
 })
 

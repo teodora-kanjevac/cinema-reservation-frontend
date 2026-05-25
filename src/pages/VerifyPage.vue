@@ -49,12 +49,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, nextTick } from 'vue'
+import { ref, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import CodeVerification from '@/components/ui/CodeVerification.vue'
 import ArrowRightIcon from '@/components/icons/ArrowRightIcon.vue'
 import { authService } from '@/services/authService'
-import client from '@/config/api'
 
 const router = useRouter()
 
@@ -87,7 +86,7 @@ const verify = async () => {
   codeError.value = ''
 
   try {
-    await authService.verifyCode(emailAddress.value, typedCode.value)
+    await authService.verifyCode(typedCode.value)
     localStorage.removeItem('pendingEmail')
 
     router.push('/')
@@ -109,7 +108,7 @@ const verify = async () => {
 const resend = async () => {
   codeError.value = ''
   try {
-    await client.post('/auth/resend-code', { email: emailAddress.value })
+    await authService.resendCode()
 
     codeRef.value?.reset()
     verifyReady.value = false

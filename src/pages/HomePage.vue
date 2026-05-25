@@ -118,7 +118,7 @@ const router = useRouter()
 const heroIdx = ref(0)
 const searchQuery = ref('')
 const activeGenre = ref('')
-const isLoading = ref(true)
+const loading = ref(true)
 const movies = ref<Movie[]>([])
 const genres = ref<Genre[]>([])
 
@@ -156,14 +156,14 @@ function goToBrowse() {
 let timer: any
 onMounted(async () => {
   try {
-    isLoading.value = true
+    loading.value = true
     const [moviesData, genresData] = await Promise.all([movieService.getAllMovies(), movieService.getGenres()])
     movies.value = moviesData
     genres.value = genresData
   } catch (error) {
     console.error('Failed to connect to backend api:', error)
   } finally {
-    isLoading.value = false
+    loading.value = false
   }
   timer = setInterval(() => {
     heroIdx.value = (heroIdx.value + 1) % featured.value.length

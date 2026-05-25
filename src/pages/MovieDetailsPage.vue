@@ -1,8 +1,9 @@
 <template>
-  <div v-if="isLoading" class="flex flex-col items-center justify-center py-32">
+  <div v-if="loading" class="flex flex-col items-center justify-center py-32">
     <Spinner />
     <p class="mt-4 text-sm text-gold tracking-wider uppercase font-semibold">Loading Movie Details...</p>
   </div>
+
   <div v-else-if="movie">
     <section class="relative min-h-120 flex items-center">
       <div
@@ -44,14 +45,16 @@
           </h1>
 
           <div class="flex items-center gap-3 flex-wrap mb-4">
-            <span v-if="movie.releaseDate" class="text-sm text-muted">{{ dayjs(movie.releaseDate).year() }}</span>
+            <span v-if="movie.releaseDate" class="text-sm text-muted">
+              {{ dayjs(movie.releaseDate).year() }}
+            </span>
             <span class="size-1 rounded-full bg-dim" />
-            <span v-if="movie.runTime" class="text-sm text-muted">{{ convertMinutesToHours(movie.runTime) }}</span>
+            <span v-if="movie.runTime" class="text-sm text-muted">
+              {{ convertMinutesToHours(movie.runTime) }}
+            </span>
           </div>
 
-          <p class="text-[15px] text-muted leading-relaxed mb-6 max-w-3xl">
-            {{ movie.description }}
-          </p>
+          <p class="text-[15px] text-muted leading-relaxed mb-6 max-w-3xl">{{ movie.description }}</p>
 
           <div class="flex flex-wrap gap-x-12 gap-y-4 mb-8">
             <div>
@@ -86,101 +89,139 @@
     <section id="screenings" class="max-w-7xl mx-auto px-8 pt-12">
       <h2 class="font-display text-[24px] tracking-[0.06em] mb-5">SELECT SHOWING</h2>
 
-      <div class="flex gap-2 overflow-x-auto pb-1 mb-7 scrollbar-hide">
-        <button
-          v-for="(d, i) in SCREENING_DATES"
-          :key="i"
-          class="shrink-0 text-center px-4 py-2.5 rounded-xl border transition-all duration-200"
-          :class="selectedDate === i ? 'border-gold bg-gold/10 text-gold' : 'border-dark bg-card hover:border-bright'"
-          @click="selectedDate = i"
-        >
-          <span
-            class="block text-[11px] uppercase tracking-[0.08em]"
-            :class="selectedDate === i ? 'text-gold' : 'text-dim'"
-            >{{ d.name }}</span
-          >
-          <span
-            class="block font-display text-[26px] leading-none mt-0.5"
-            :class="selectedDate === i ? 'text-gold' : 'text-primary'"
-            >{{ d.num }}</span
-          >
-        </button>
+      <div v-if="screeningsLoading" class="flex items-center gap-3 text-muted py-8">
+        <Spinner class="size-5" />
+        <span class="text-sm">Loading screenings…</span>
       </div>
 
-      <div v-for="cinema in CINEMAS" :key="cinema.name" class="mb-7">
-        <div class="flex items-center gap-2 text-sm font-semibold text-muted mb-3">
-          <span class="w-0.75 h-3.5 rounded-sm bg-gold shrink-0" />
-          {{ cinema.name }}
-          <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-elevated text-dim border border-dark">
-            {{ cinema.distance }}
-          </span>
-        </div>
+      <div v-else-if="!screeningDates.length" class="py-12 text-center">
+        <span class="flex items-center justify-center mb-6 opacity-40"><NoScreeningIcon class="size-20" /></span>
+        <p class="text-muted text-sm">No upcoming screenings for this movie.</p>
+      </div>
 
-        <div class="flex gap-2.5 flex-wrap">
+      <template v-else>
+        <div class="flex gap-2 overflow-x-auto pb-1 mb-7 scrollbar-hide">
           <button
-            v-for="time in cinema.times"
-            :key="time.t"
-            class="text-center px-4 py-2.5 rounded-lg border transition-all duration-200"
+            v-for="(d, i) in screeningDates"
+            :key="d.date"
+            class="shrink-0 text-center px-4 py-2.5 rounded-xl border transition-all duration-200"
             :class="
-              selectedTimeKey === cinema.name + time.t
-                ? 'border-gold bg-gold/10'
-                : 'border-dark bg-card hover:border-gold/50 hover:bg-gold/5'
+              selectedDateIdx === i ? 'border-gold bg-gold/10 text-gold' : 'border-dark bg-card hover:border-bright'
             "
-            @click="selectTime(cinema, time)"
+            @click="selectDate(i)"
           >
-            <span class="block text-[15px] font-semibold text-primary">{{ time.t }}</span>
-            <span class="block text-[11px] text-muted mt-0.5">{{ time.type }}</span>
-            <span class="block text-[11px] text-success mt-0.5">{{ time.seats }} left</span>
+            <span
+              class="block text-[11px] uppercase tracking-[0.08em]"
+              :class="selectedDateIdx === i ? 'text-gold' : 'text-dim'"
+              >{{ d.label }}</span
+            >
+            <span
+              class="block font-display text-[26px] leading-none mt-0.5"
+              :class="selectedDateIdx === i ? 'text-gold' : 'text-primary'"
+              >{{ d.dayNum }}</span
+            >
           </button>
         </div>
-      </div>
 
-      <transition name="page">
-        <div v-if="selectedTimeKey" class="mt-10 pt-8 border-t border-dark">
-          <h2 class="font-display text-[24px] tracking-[0.06em] mb-6">CHOOSE YOUR SEATS</h2>
+        <div v-for="cinema in activeDateCinemas" :key="cinema.cinemaId" class="mb-7">
+          <div class="flex items-center gap-2 text-sm font-semibold text-muted mb-3">
+            <span class="w-0.75 h-3.5 rounded-sm bg-gold shrink-0" />
+            {{ cinema.name }}
+            <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-elevated text-dim border border-dark">
+              {{ cinema.address }}
+            </span>
+          </div>
 
-          <div class="flex flex-wrap gap-6 items-start">
-            <div class="flex-1 min-w-[320px]">
-              <SeatMap :seat-map="seatMap" :is-selected="isSelected" @toggle="toggleSeat" />
-            </div>
-
-            <div class="w-65 bg-card border border-dark rounded-2xl p-6 shrink-0">
-              <h3 class="font-display text-lg tracking-wide mb-4">BOOKING SUMMARY</h3>
-              <p class="text-[13.5px] text-muted mb-1 inline-flex items-center gap-1.5">
-                <ClapperboardIcon class="size-3.5 -mt-0.5" /> {{ movie.title }}
-              </p>
-              <p class="text-[13px] text-dim mb-4">{{ selectedCinema?.name }} · {{ selectedTimeObj?.t }}</p>
-
-              <div class="h-px bg-dark mb-4" />
-
-              <p v-if="!selectedSeats.length" class="text-[13.5px] text-dim text-center py-3">No seats selected</p>
-              <div v-for="s in selectedSeats" :key="s.label" class="flex justify-between text-[13.5px] mb-2">
-                <span class="text-muted">Seat {{ s.label }}</span>
-                <span class="text-gold font-semibold">€{{ s.price }}</span>
-              </div>
-
-              <div class="h-px bg-dark my-3" />
-              <div class="flex justify-between items-center text-[15px] font-bold mb-5">
-                <span>Total</span>
-                <span class="font-display text-[22px] text-gold tracking-wider"> €{{ totalPrice() }} </span>
-              </div>
-
-              <button
-                class="w-full py-3 rounded-xl text-sm font-semibold transition-all duration-200"
-                :class="
-                  selectedSeats.length
-                    ? 'bg-gold text-base hover:shadow-gold-sm hover:bg-[#f0c85a] hover:-translate-y-px'
-                    : 'bg-elevated text-dim border border-dark cursor-not-allowed'
-                "
-                :disabled="!selectedSeats.length"
-                @click="addToCart"
+          <div class="flex gap-2.5 flex-wrap">
+            <button
+              v-for="slot in cinema.slots"
+              :key="slot.timeTableId"
+              class="text-center px-4 py-2.5 rounded-lg border transition-all duration-200"
+              :class="
+                selectedTimeTableId === slot.timeTableId
+                  ? 'border-gold bg-gold/10'
+                  : 'border-dark bg-card hover:border-gold/50 hover:bg-gold/5'
+              "
+              @click="selectSlot(cinema, slot)"
+            >
+              <span class="block text-[15px] font-semibold text-primary">{{ slot.time }}</span>
+              <span class="block text-[11px] text-muted mt-0.5">{{ slot.type }}</span>
+              <span
+                class="block text-[11px] mt-0.5"
+                :class="slot.seatsLeft === 0 ? 'text-danger' : slot.seatsLeft <= 10 ? 'text-[#f0a030]' : 'text-success'"
               >
-                <span class="inline-flex items-center gap-2"><CartIcon class="size-4" />Add to Cart</span>
-              </button>
-            </div>
+                {{ slot.seatsLeft === 0 ? 'Sold out' : `${slot.seatsLeft} left` }}
+              </span>
+            </button>
           </div>
         </div>
-      </transition>
+
+        <transition name="page">
+          <div v-if="selectedTimeTableId !== null" class="mt-10 pt-8 border-t border-dark">
+            <h2 class="font-display text-[24px] tracking-[0.06em] mb-6">CHOOSE YOUR SEATS</h2>
+
+            <div v-if="seatMapLoading" class="flex items-center gap-3 text-muted py-8">
+              <Spinner class="size-5" />
+              <span class="text-sm">Loading seat map…</span>
+            </div>
+
+            <div v-else class="flex flex-wrap gap-6 items-start">
+              <div class="flex-1 min-w-[320px]">
+                <SeatMap :seat-map="seatMap" :is-selected="isSelected" @toggle="toggleSeat" />
+              </div>
+
+              <div class="w-65 bg-card border border-dark rounded-2xl p-6 shrink-0">
+                <h3 class="font-display text-lg tracking-wide mb-4">BOOKING SUMMARY</h3>
+
+                <p class="text-[13.5px] text-muted mb-1 inline-flex items-center gap-1.5">
+                  <ClapperboardIcon class="size-3.5 -mt-0.5" />
+                  {{ movie.title }}
+                </p>
+                <p class="text-[13px] text-dim mb-1">
+                  {{ selectedCinema?.name }}
+                </p>
+                <p class="text-[13px] text-dim mb-4">
+                  {{ activeDate?.label }} {{ dayjs(activeDate?.date).format('DD.MM') }} · {{ selectedSlot?.time }}
+                  <span class="ml-1 text-[11px] text-muted">({{ selectedSlot?.type }})</span>
+                </p>
+
+                <div class="h-px bg-dark mb-4" />
+
+                <p v-if="!selectedSeats.length" class="text-[13.5px] text-dim text-center py-3">No seats selected</p>
+
+                <div v-for="s in selectedSeats" :key="s.label" class="flex justify-between text-[13.5px] mb-2">
+                  <span class="text-muted">
+                    Seat {{ s.label }}
+                    <span v-if="s.premium" class="ml-1 text-[10px] text-info font-semibold uppercase tracking-wide"
+                      >Premium</span
+                    >
+                  </span>
+                  <span class="text-gold font-semibold">{{ s.price }} RSD</span>
+                </div>
+
+                <div class="h-px bg-dark my-3" />
+                <div class="flex justify-between items-center text-[15px] font-bold mb-5">
+                  <span>Total</span>
+                  <span class="font-display text-[22px] text-gold tracking-wider"> {{ totalPrice() }} RSD</span>
+                </div>
+
+                <button
+                  class="w-full py-3 rounded-xl text-sm font-semibold transition-all duration-200"
+                  :class="
+                    selectedSeats.length
+                      ? 'bg-gold text-base hover:shadow-gold-sm hover:bg-[#f0c85a] hover:-translate-y-px'
+                      : 'bg-elevated text-dim border border-dark cursor-not-allowed'
+                  "
+                  :disabled="!selectedSeats.length"
+                  @click="addToCart"
+                >
+                  <span class="inline-flex items-center gap-2"> <CartIcon class="size-4" />Add to Cart </span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </transition>
+      </template>
 
       <div class="h-16" />
     </section>
@@ -189,85 +230,148 @@
   <div v-else class="flex flex-col items-center justify-center pt-72 pb-32 text-center">
     <span class="mb-6 opacity-40"><NoMovieIcon class="size-20" /></span>
     <h2 class="text-xl font-semibold text-muted mb-3">Movie not found</h2>
-    <router-link to="/" class="flex items-center gap-1 text-gold text-sm hover:underline no-underline"
-      >Back to home <ArrowRightIcon class="size-4"
-    /></router-link>
+    <router-link to="/" class="flex items-center gap-1 text-gold text-sm hover:underline no-underline">
+      Back to home <ArrowRightIcon class="size-4" />
+    </router-link>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
-import { CINEMAS, SCREENING_DATES } from '@/data/movie'
-import { useSeatMap } from '@/composables/useSeatMap.js'
+import { useSeatMap } from '@/composables/useSeatMap'
+import { movieService } from '@/services/movieService'
+import { convertMinutesToHours } from '@/utils/time'
+import type { Movie } from '@/types/Movie'
 import SeatMap from '@/components/ui/SeatMap.vue'
-import StarIcon from '@/components/icons/StarIcon.vue'
+import Spinner from '@/components/ui/Spinner.vue'
 import TicketIcon from '@/components/icons/TicketIcon.vue'
 import HeartIcon from '@/components/icons/HeartIcon.vue'
 import ClapperboardIcon from '@/components/icons/ClapperboardIcon.vue'
 import CartIcon from '@/components/icons/CartIcon.vue'
 import ArrowRightIcon from '@/components/icons/ArrowRightIcon.vue'
 import NoMovieIcon from '@/components/icons/NoMovieIcon.vue'
-import type { Movie } from '@/types/Movie'
-import { movieService } from '@/services/movieService'
-import { convertMinutesToHours } from '@/utils/time'
 import dayjs from 'dayjs'
-import Spinner from '@/components/ui/Spinner.vue'
+import type { CinemaScreenings, ScreeningDate, ScreeningSlot } from '@/types/TimeTable'
+import { timeTableService } from '@/services/timeTableService'
+import NoScreeningIcon from '@/components/icons/NoScreeningIcon.vue'
+import { invoiceService } from '@/services/invoiceService'
 
 const route = useRoute()
 
 const movie = ref<Movie>()
-const isLoading = ref(true)
-const selectedDate = ref(0)
-const selectedTimeKey = ref('')
-const selectedCinema = ref<any | null>(null)
-const selectedTimeObj = ref<any | null>(null)
+const loading = ref(true)
 
+const screeningDates = ref<ScreeningDate[]>([])
+const screeningsLoading = ref(false)
+const selectedDateIdx = ref(0)
+
+const selectedTimeTableId = ref<number | null>(null)
+const selectedCinema = ref<CinemaScreenings | null>(null)
+const selectedSlot = ref<ScreeningSlot | null>(null)
+
+const seatMapLoading = ref(false)
 const { seatMap, selectedSeats, buildMap, isSelected, toggleSeat, totalPrice } = useSeatMap()
 
-onMounted(async () => {
-  try {
-    isLoading.value = true
-    const movieData = await movieService.getMovieById(route.params.id as string)
-    movie.value = movieData
-  } catch (error) {
-    console.error('Failed to connect to backend api:', error)
-  } finally {
-    isLoading.value = false
-  }
-})
-
 const actors = computed(() => {
-  if (!movie.value) return
-  const actors = movie.value?.actors
-  if (!actors || actors.length === 0) return 'No actors'
-
-  return actors.map((a) => a.name).join(', ')
+  const list = movie.value?.actors
+  if (!list?.length) return 'No actors listed'
+  return list.map((a: any) => a.name).join(', ')
 })
 
-function selectTime(cinema: any, time: any) {
-  selectedTimeKey.value = cinema.name + time.t
-  selectedCinema.value = cinema
-  selectedTimeObj.value = time
-  buildMap()
-  setTimeout(() => {
-    document.querySelector('[data-seat-map]')?.scrollIntoView({ behavior: 'smooth' })
-  }, 100)
+const activeDateCinemas = computed<CinemaScreenings[]>(() => screeningDates.value[selectedDateIdx.value]?.cinemas ?? [])
+const activeDate = computed<ScreeningDate | undefined>(() => screeningDates.value[selectedDateIdx.value])
+
+onMounted(async () => {
+  const id = route.params.id as string
+  await Promise.all([fetchMovie(id), fetchScreenings(id)])
+})
+
+async function fetchMovie(id: string) {
+  try {
+    loading.value = true
+    movie.value = await movieService.getMovieById(id)
+  } catch (err) {
+    console.error('Failed to load movie:', err)
+  } finally {
+    loading.value = false
+  }
 }
 
-function addToCart() {
-  if (!selectedSeats.value.length) return
-  //   cartStore.addItem({
-  //     movie: movie.value,
-  //     cinema: selectedCinema.value.name,
-  //     date: `${SCREENING_DATES[selectedDate.value].name} ${SCREENING_DATES[selectedDate.value].num}`,
-  //     time: selectedTimeObj.value.t,
-  //     type: selectedTimeObj.value.type,
-  //     seats: [...selectedSeats.value],
-  //     total: totalPrice(),
-  //   })
-  //   toast.success(`${selectedSeats.value.length} ticket(s) added to cart!`)
+async function fetchScreenings(id: string) {
+  try {
+    screeningsLoading.value = true
+    screeningDates.value = await timeTableService.getScreeningsForMovie(id)
+  } catch (err) {
+    console.error('Failed to load screenings:', err)
+    screeningDates.value = []
+  } finally {
+    screeningsLoading.value = false
+  }
+}
+
+function selectDate(idx: number) {
+  selectedDateIdx.value = idx
+  selectedTimeTableId.value = null
+  selectedCinema.value = null
+  selectedSlot.value = null
   buildMap()
-  selectedTimeKey.value = ''
+}
+
+async function selectSlot(cinema: CinemaScreenings, slot: ScreeningSlot) {
+  if (slot.seatsLeft === 0) return
+
+  selectedTimeTableId.value = slot.timeTableId
+  selectedCinema.value = cinema
+  selectedSlot.value = slot
+
+  try {
+    seatMapLoading.value = true
+    buildMap()
+
+    const data = await timeTableService.getSeatMap(slot.timeTableId)
+    buildMap(data.seats)
+  } catch (err) {
+    console.error('Failed to load seat map:', err)
+  } finally {
+    seatMapLoading.value = false
+  }
+}
+
+async function addToCart() {
+  if (!selectedSeats.value.length || !movie.value || !selectedSlot.value) return
+
+  const ticketsCountAdded = selectedSeats.value.length
+  const targetTimeTableId = selectedSlot.value.timeTableId
+
+  await invoiceService.addToCart(
+    targetTimeTableId,
+    selectedSeats.value.map((s) => ({
+      label: s.label,
+      price: s.price,
+      seatIndex: s.seatIndex,
+    })),
+  )
+
+  window.dispatchEvent(new Event('cart-change'))
+
+  const activeDateObj = screeningDates.value[selectedDateIdx.value]
+  if (activeDateObj && activeDateObj.cinemas) {
+    for (const cinema of activeDateObj.cinemas) {
+      const targetSlot = cinema.slots.find((slot) => slot.timeTableId === targetTimeTableId)
+
+      if (targetSlot) {
+        targetSlot.seatsLeft = Math.max(0, targetSlot.seatsLeft - ticketsCountAdded)
+        break
+      }
+    }
+  }
+
+  const updatedSeats = await timeTableService.getSeatMap(targetTimeTableId)
+  buildMap(updatedSeats.seats)
+
+  selectedTimeTableId.value = null
+  selectedCinema.value = null
+  selectedSlot.value = null
 }
 </script>

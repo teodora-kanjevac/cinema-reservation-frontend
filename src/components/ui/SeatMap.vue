@@ -20,9 +20,9 @@
           <button
             v-else
             class="seat-shape"
-            :class="seatClass(seat, ri, ci)"
-            :disabled="seat.taken"
-            :title="`${String.fromCharCode(65 + ri)}${ci + 1} · €${(seat as Seat).premium ? 16 : 12}`"
+            :class="seatClass(seat as Seat)"
+            :disabled="(seat as Seat).taken"
+            :title="`${(seat as Seat).label} · ${(seat as Seat).premium ? 1700 : 1350} RSD`"
             @click="$emit('toggle', seat)"
           />
         </template>
@@ -44,11 +44,13 @@
 
 <script setup lang="ts">
 type Seat = {
-  aisle?: false
-  taken?: boolean
-  row?: number
-  col?: number
-  premium?: boolean
+  aisle: false
+  taken: boolean
+  row: number
+  col: number
+  premium: boolean
+  seatIndex: number
+  label: string
 }
 
 type Aisle = {
@@ -64,7 +66,7 @@ const props = defineProps({
 
 defineEmits(['toggle'])
 
-function seatClass(seat: Seat, ri: any, ci: any) {
+function seatClass(seat: Seat) {
   if (seat.taken) return ['seat-taken']
   if (props.isSelected(seat.row, seat.col)) {
     return seat.premium ? ['seat-selected', 'seat-premium'] : ['seat-selected']

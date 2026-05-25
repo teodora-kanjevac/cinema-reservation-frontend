@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen w-6xl mx-auto px-8 py-12 pt-32">
+  <div class="min-h-screen min-w-6xl mx-auto px-8 py-12 pt-32">
     <div class="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-7 items-start">
       <aside class="bg-card border border-dark rounded-2xl overflow-hidden lg:sticky lg:top-22.5">
         <div

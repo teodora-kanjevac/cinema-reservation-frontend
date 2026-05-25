@@ -16,4 +16,9 @@ export const movieService = {
     const response = await client.get<Genre[]>('/movies/genres')
     return response.data
   },
+
+  async getMovieDetails(id: number): Promise<any> {
+    const response = await client.get(`/movies/details/${id}`)
+    return response.data
+  },
 }
