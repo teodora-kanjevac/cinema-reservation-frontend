@@ -14,8 +14,8 @@ export const authService = {
     return response.data
   },
 
-  async verifyCode(code: string): Promise<any> {
-    const response = await client.post('/auth/verify', code)
+  async verifyCode(email: string, code: string): Promise<any> {
+    const response = await client.post('/auth/verify', { email, code })
 
     localStorage.setItem('user', JSON.stringify(response.data.user))
 

@@ -265,6 +265,8 @@ import NoScreeningIcon from '@/components/icons/NoScreeningIcon.vue'
 import { invoiceService } from '@/services/invoiceService'
 import { authService } from '@/services/authService'
 import { wishlistService } from '@/services/wishlistService'
+import router from '@/router'
+import { useNotification } from '@/composables/usePopup'
 
 const route = useRoute()
 
@@ -284,6 +286,7 @@ const selectedSlot = ref<ScreeningSlot | null>(null)
 
 const seatMapLoading = ref(false)
 const { seatMap, selectedSeats, buildMap, isSelected, toggleSeat, totalPrice } = useSeatMap()
+const { showNotification } = useNotification()
 
 const actors = computed(() => {
   const list = movie.value?.actors
@@ -362,7 +365,10 @@ async function selectSlot(cinema: CinemaScreenings, slot: ScreeningSlot) {
 }
 
 async function toggleWishlist() {
-  if (!authService.isAuthenticated()) return
+  if (!authService.isAuthenticated()) {
+    router.push('/auth/login')
+    return
+  }
 
   try {
     isProcessing.value = true
@@ -371,12 +377,23 @@ async function toggleWishlist() {
     if (isSaved.value) {
       await wishlistService.removeItem(targetId)
       isSaved.value = false
+      showNotification(
+        'success',
+        'Movie removed from wishlist',
+        'Movie has been successfully removed to your wishlist.',
+      )
     } else {
       await wishlistService.addItem(targetId)
       isSaved.value = true
+      showNotification('success', 'Movie added to wishlist', 'Movie has been successfully added to your wishlist.')
     }
   } catch (err) {
     console.error('Could not change wishlist preference:', err)
+    showNotification(
+      'error',
+      'An error has ocurred',
+      'An error has ocurred while updating your wishlist. Please try again later.',
+    )
   } finally {
     isProcessing.value = false
   }
@@ -387,6 +404,11 @@ async function addToCart() {
 
   const ticketsCountAdded = selectedSeats.value.length
   const targetTimeTableId = selectedSlot.value.timeTableId
+
+  if (!authService.isAuthenticated()) {
+    router.push('/auth/login')
+    return
+  }
 
   await invoiceService.addToCart(
     targetTimeTableId,
@@ -413,6 +435,8 @@ async function addToCart() {
 
   const updatedSeats = await timeTableService.getSeatMap(targetTimeTableId)
   buildMap(updatedSeats.seats)
+
+  showNotification('success', 'Movie added to cart', 'Movie has been successfully added to your cart.')
 
   selectedTimeTableId.value = null
   selectedCinema.value = null

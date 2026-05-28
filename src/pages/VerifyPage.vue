@@ -86,7 +86,7 @@ const verify = async () => {
   codeError.value = ''
 
   try {
-    await authService.verifyCode(typedCode.value)
+    await authService.verifyCode(emailAddress.value, typedCode.value)
     localStorage.removeItem('pendingEmail')
 
     router.push('/')

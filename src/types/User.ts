@@ -7,3 +7,10 @@ export interface User {
   dateOfBirth?: Date
   verifiedAt?: Date
 }
+
+export interface UserStats {
+  userId: number
+  moviesWatched: number
+  totalMoneySpent: number
+  wishlistItemCount: number
+}

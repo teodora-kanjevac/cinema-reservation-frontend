@@ -33,4 +33,25 @@ export const invoiceService = {
     const response = await client.get<Invoice[]>('/invoices/bookings')
     return response.data
   },
+
+  async downloadReceipt(invoiceId: number, pursId: string) {
+    try {
+      const response = await client.get(`/invoices/${invoiceId}/download`, {
+        responseType: 'blob',
+      })
+
+      const blob = response.data
+      const url = window.URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.setAttribute('download', `receipt-${pursId}.pdf`)
+      document.body.appendChild(link)
+      link.click()
+
+      link.remove()
+      window.URL.revokeObjectURL(url)
+    } catch (err) {
+      console.error('Could not fetch receipt document stream downstream asset:', err)
+    }
+  },
 }

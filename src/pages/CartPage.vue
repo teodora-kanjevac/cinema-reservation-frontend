@@ -104,22 +104,11 @@
           <span class="text-primary shrink-0">{{ item.pricePerItem * item.count }} RSD</span>
         </div>
 
-        <div class="h-px bg-dark my-4" />
-
-        <div class="flex justify-between text-[14px] mb-2">
-          <span class="text-muted">Subtotal</span>
-          <span>{{ subtotal }} RSD</span>
-        </div>
-        <div class="flex justify-between text-[14px] mb-2">
-          <span class="text-muted">Booking Fee</span>
-          <span>{{ bookingFee }} RSD</span>
-        </div>
-
         <div class="h-px bg-dark mb-4" />
 
         <div class="flex justify-between items-center text-[16px] font-bold mb-5">
           <span>Total</span>
-          <span class="font-display text-[26px] text-gold tracking-wide">{{ grandTotal }} RSD</span>
+          <span class="font-display text-[26px] text-gold tracking-wide">{{ subtotal }} RSD</span>
         </div>
 
         <button
@@ -158,12 +147,15 @@ import CloseIcon from '@/components/icons/CloseIcon.vue'
 import TrashIcon from '@/components/icons/TrashIcon.vue'
 import { changeCheckoutAccess } from '@/router'
 import { formatSeatLabel } from '@/utils/seatNumber'
+import { useNotification } from '@/composables/usePopup'
 
 const router = useRouter()
 
 const cartData = ref<any | null>(null)
 const loading = ref(true)
 const actionLoading = ref(false)
+
+const { showNotification } = useNotification()
 
 const itemCount = computed(() => {
   if (!cartData.value?.invoiceItems) return 0
@@ -173,14 +165,6 @@ const itemCount = computed(() => {
 const subtotal = computed(() => {
   if (!cartData.value?.invoiceItems) return 0
   return cartData.value.invoiceItems.reduce((acc: number, item: any) => acc + item.pricePerItem * item.count, 0)
-})
-
-const bookingFee = computed(() => {
-  return itemCount.value > 0 ? 50 : 0
-})
-
-const grandTotal = computed(() => {
-  return subtotal.value + bookingFee.value
 })
 
 async function loadCart() {
@@ -231,8 +215,15 @@ async function remove(invoiceItemId: number) {
     await loadCart()
 
     window.dispatchEvent(new Event('cart-change'))
+
+    showNotification('success', 'Movie removed from cart', 'Movie has been successfully removed from your cart.')
   } catch (err) {
     console.error('Failed to remove cart item:', err)
+    showNotification(
+      'error',
+      'An error has ocurred',
+      'An error has ocurred while updating your cart. Please try again later.',
+    )
   } finally {
     actionLoading.value = false
   }
@@ -246,8 +237,15 @@ async function removeAll() {
     await loadCart()
 
     window.dispatchEvent(new Event('cart-change'))
+
+    showNotification('success', 'Movies removed from cart', 'Movies have been successfully removed from your cart.')
   } catch (err) {
     console.error('Failed to remove cart items:', err)
+    showNotification(
+      'error',
+      'An error has ocurred',
+      'An error has ocurred while updating your cart. Please try again later.',
+    )
   } finally {
     actionLoading.value = false
   }

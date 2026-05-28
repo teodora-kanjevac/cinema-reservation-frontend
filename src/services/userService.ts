@@ -1,9 +1,14 @@
 import client from '@/config/api'
-import type { User } from '@/types/User'
+import type { User, UserStats } from '@/types/User'
 
 export const userService = {
   async getUserInfo(): Promise<User> {
     const response = await client.get<User>('/users/info')
+    return response.data
+  },
+
+  async getUserStats(): Promise<UserStats> {
+    const response = await client.get<UserStats>('/users/stats')
     return response.data
   },
 

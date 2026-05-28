@@ -88,19 +88,19 @@
         </template>
 
         <template v-if="activeTab === 'bookings'">
-          <div class="bg-card border border-dark rounded-2xl p-7">
+          <div class="bg-card border border-dark rounded-2xl px-7 pt-7 pb-4">
             <h2 class="text-[16px] font-semibold mb-5 flex items-center gap-2.5">
               <TicketIcon class="size-5 text-gold" /> All Bookings
             </h2>
 
             <div v-if="bookings.length > 0">
-              <BookingItem v-for="b in bookings" :key="b.movie + b.date" :booking="b" show-download />
-              <button
-                class="flex items-center gap-1 mt-3 text-sm text-muted border border-dark rounded-lg px-4 py-2 hover:border-bright hover:text-primary transition-all duration-200"
-                @click="activeTab = 'bookings'"
-              >
-                View All Bookings <ArrowRightIcon class="size-5" />
-              </button>
+              <BookingItem
+                v-for="b in bookings"
+                :key="b.movie + b.date"
+                :booking="b"
+                show-download
+                @download="handleReceiptDownload(b.invoiceId, b.pursId)"
+              />
             </div>
             <div v-else class="text-center py-10 text-muted italic">You haven't made any bookings yet.</div>
           </div>
@@ -272,10 +272,7 @@
               <HeartIcon class="size-5 text-gold" /> Wishlist
             </h2>
 
-            <div
-              v-if="wishlist && wishlist.items.length > 0"
-              class="grid grid-cols-2 sm:grid-cols-3 gap-3"
-            >
+            <div v-if="wishlist && wishlist.items.length > 0" class="grid grid-cols-2 sm:grid-cols-3 gap-3">
               <div
                 v-for="item in wishlist?.items"
                 :key="item.wishlistItemId"
@@ -343,7 +340,7 @@ import CreditCardIcon from '@/components/icons/CreditCardIcon.vue'
 import SettingsIcon from '@/components/icons/SettingsIcon.vue'
 import { authService } from '@/services/authService'
 import PersonIcon from '@/components/icons/PersonIcon.vue'
-import type { User } from '@/types/User'
+import type { User, UserStats } from '@/types/User'
 import type { Wishlist } from '@/types/Wishlist'
 import { userService } from '@/services/userService'
 import dayjs from 'dayjs'
@@ -360,6 +357,7 @@ import { formatSeatLabel } from '@/utils/seatNumber'
 import { movieService } from '@/services/movieService'
 import { wishlistService } from '@/services/wishlistService'
 import CloseIcon from '@/components/icons/CloseIcon.vue'
+import { useNotification } from '@/composables/usePopup'
 
 const router = useRouter()
 
@@ -368,8 +366,11 @@ const isLoggedIn = ref(false)
 const profileErrorMessage = ref('')
 const passwordErrorMessage = ref('')
 const user = ref<User | null>(null)
+const userStats = ref<UserStats | null>(null)
 const bookings = ref<any[]>([])
 const wishlist = ref<Wishlist | null>(null)
+
+const { showNotification } = useNotification()
 
 const profileForm = ref({
   firstName: '',
@@ -404,17 +405,19 @@ const navItems = [
   { tab: 'wishlist', icon: HeartIcon, label: 'Wishlist' },
 ]
 
-const stats = [
-  { value: '24', label: 'Movies Watched' },
-  { value: '€312', label: 'Total Spent' },
-  { value: '5', label: 'Wishlist Items' },
-]
+const stats = computed(() => [
+  { value: userStats.value?.moviesWatched, label: 'Movies Watched' },
+  { value: `${userStats.value?.totalMoneySpent ?? 0} RSD`, label: 'Total Spent' },
+  { value: userStats.value?.wishlistItemCount, label: 'Wishlist Items' },
+])
 
 async function loadUserBookings() {
   try {
     const rawInvoices = await invoiceService.getUserBookings()
 
     const localizedBookings = rawInvoices.map((invoice: any) => {
+      const invoiceId = invoice.invoiceId
+      const pursId = invoice.pursId || ''
       const items = invoice.invoiceItems || []
       const firstItem = items[0]
       const timeTable = firstItem?.timeTable
@@ -428,8 +431,8 @@ async function loadUserBookings() {
           .filter((num: any) => num !== undefined && num !== null)
           .join(', ') || 'N/A'
 
-      const isPast = dayjs(invoice.pursTime).isBefore(dayjs())
-      const displayStatus = isPast ? 'Completed' : 'Confirmed'
+      const isBefore = dayjs(timeTable?.screeningDate).isBefore(dayjs())
+      const displayStatus = isBefore ? 'Completed' : 'Confirmed'
 
       const calculatedTotal = items.reduce((sum: number, item: any) => {
         return sum + item.pricePerItem
@@ -437,6 +440,8 @@ async function loadUserBookings() {
       const displayAmount = calculatedTotal || 0
 
       return {
+        invoiceId,
+        pursId,
         movieId: timeTable?.movieId,
         cinema: displayCinema,
         date: timeTable?.screeningDate ? dayjs(timeTable.screeningDate).format('MMM DD, YYYY') : 'N/A',
@@ -471,6 +476,8 @@ async function loadUserBookings() {
       const externalMovie = movieLookup[booking.movieId]
 
       return {
+        invoiceId: booking.invoiceId,
+        pursId: booking.pursId,
         movieId: booking.movieId,
         movieName: externalMovie?.title || 'Unknown Movie',
         cinema: booking.cinema,
@@ -508,6 +515,10 @@ async function logout() {
   router.push('/')
 }
 
+async function handleReceiptDownload(invoiceId: number, pursId: string) {
+  await invoiceService.downloadReceipt(invoiceId, pursId)
+}
+
 async function saveProfile() {
   try {
     profileErrorMessage.value = ''
@@ -539,8 +550,15 @@ async function saveProfile() {
     }
 
     window.dispatchEvent(new Event('auth-change'))
+
+    showNotification('success', 'Profile updated successfully', 'Your profile has been successfully updated.')
   } catch (err) {
     console.error('Failed to update user:', err)
+    showNotification(
+      'error',
+      'An error has ocurred',
+      'An error has ocurred while updating your cart. Please try again later.',
+    )
   }
 }
 
@@ -563,6 +581,8 @@ async function updatePassword() {
       newPassword: '',
       confirmPassword: '',
     }
+
+    showNotification('success', 'Password updated successfully', 'Your password has been successfully changed.')
   } catch (error: any) {
     if (error.code === 'CANNOT_MODIFY') {
       passwordErrorMessage.value = 'New password cannot be identical to your old password.'
@@ -592,8 +612,15 @@ async function removeFromWishlist(movieId: number) {
         items: wishlist.value.items.filter((item) => item.movieId !== movieId),
       }
     }
+
+    showNotification('success', 'Wishlist updated successfully', 'Your wishlist has been successfully updated.')
   } catch (err) {
     console.error('Failed to delete item from wishlist:', err)
+    showNotification(
+      'error',
+      'An error has ocurred',
+      'An error has ocurred while updating your wishlist. Please try again later.',
+    )
   }
 }
 
@@ -605,6 +632,7 @@ onMounted(async () => {
 
   if (isLoggedIn.value) {
     user.value = await userService.getUserInfo()
+    userStats.value = await userService.getUserStats()
     await loadUserBookings()
     await fetchUserWishlist()
     profileForm.value = {

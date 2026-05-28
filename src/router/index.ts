@@ -13,6 +13,7 @@ import UserProfilePage from '@/pages/UserProfilePage.vue'
 import { authService } from '@/services/authService'
 import NotFoundPage from '@/pages/NotFoundPage.vue'
 import CheckoutSuccessPage from '@/pages/CheckoutSuccessPage.vue'
+import AdminManagementPage from '@/pages/AdminManagementPage.vue'
 
 const routes = [
   {
@@ -24,6 +25,7 @@ const routes = [
       { path: 'movie/:id', name: 'movie', component: MovieDetailsPage, meta: { layout: 'default' } },
       { path: 'cart', name: 'cart', component: CartPage, meta: { requiresAuth: true, layout: 'default' } },
       { path: 'profile', name: 'profile', component: UserProfilePage, meta: { requiresAuth: true, layout: 'default' } },
+      { path: 'admin', name: 'admin', component: AdminManagementPage, meta: { requiresAuth: true, layout: 'default' } },
       {
         path: 'checkout/success',
         name: 'checkout',

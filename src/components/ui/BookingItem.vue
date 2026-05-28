@@ -25,6 +25,7 @@
       <span class="font-display text-[18px] text-gold tracking-wide"> {{ booking.amount }} RSD </span>
       <button
         v-if="showDownload"
+        @click="$emit('download', booking.invoiceId)"
         class="text-[11px] px-2.5 py-1 flex items-center gap-1 rounded text-primary bg-elevated border-bright hover:border-gold hover:text-gold border transition-all cursor-pointer"
       >
         Download <DownloadIcon class="size-4 -mt-0.5" />
@@ -38,6 +39,7 @@ import { computed } from 'vue'
 import DownloadIcon from '../icons/DownloadIcon.vue'
 
 interface Booking {
+  invoiceId: number
   movieName: string
   movieId: number
   cinema: string
@@ -52,6 +54,10 @@ interface Booking {
 const props = defineProps<{
   booking: Booking
   showDownload?: boolean
+}>()
+
+const emit = defineEmits<{
+  (e: 'download', id: number): void
 }>()
 
 const statusClass = computed(() =>

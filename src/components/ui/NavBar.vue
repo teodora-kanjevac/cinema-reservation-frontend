@@ -27,6 +27,15 @@
 
     <div class="flex items-center gap-2.5 ml-auto">
       <router-link
+        v-if="isLoggedIn"
+        to="/admin"
+        class="size-9.5 rounded flex items-center justify-center bg-elevated border border-dark text-muted hover:text-text-primary hover:border-bright transition-all duration-200"
+        title="Admin"
+      >
+        <BuildingSettingsIcon class="size-5" />
+      </router-link>
+
+      <router-link
         to="/browse"
         class="size-9.5 rounded flex items-center justify-center bg-elevated border border-dark text-muted hover:text-text-primary hover:border-bright transition-all duration-200"
         title="Search"
@@ -84,6 +93,7 @@ import LogInIcon from '../icons/LogInIcon.vue'
 import { authService } from '@/services/authService'
 import { invoiceService } from '@/services/invoiceService'
 import type { User } from '@/types/User'
+import BuildingSettingsIcon from '../icons/BuildingSettingsIcon.vue'
 
 const isLoggedIn = ref(false)
 const user = ref<User | null>(null)
