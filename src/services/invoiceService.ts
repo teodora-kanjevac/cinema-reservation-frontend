@@ -25,7 +25,12 @@ export const invoiceService = {
     await client.delete(`/invoices/cart/remove/all`)
   },
 
-  async checkout(paymentDetails: { pursId: string; pursCounter: string }): Promise<void> {
+  async checkout(paymentDetails: { purchaseId: string; counterName: string }): Promise<void> {
     await client.post('/invoices/checkout', paymentDetails)
+  },
+
+  async getUserBookings(): Promise<Invoice[]> {
+    const response = await client.get<Invoice[]>('/invoices/bookings')
+    return response.data
   },
 }

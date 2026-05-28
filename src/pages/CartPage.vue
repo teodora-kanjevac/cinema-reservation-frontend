@@ -52,7 +52,7 @@
             <div class="flex items-center gap-1.5 text-[13px] text-muted mb-1">
               <CalendarIcon class="size-4 -mt-0.5" /> {{ dayjs(item.timeTable?.screeningDate).format('DD.MM') }} ·
               <ClockIcon class="size-4 -mt-0.5" />
-              {{ item.timeTable?.startTime }}
+              {{ item.timeTable?.startTime.substring(0, 5) }}
             </div>
             <div class="flex items-center gap-1.5 text-[13px] text-muted mb-3">
               <ScreenIcon class="size-4" /> {{ item.timeTable?.screenType }}
@@ -82,10 +82,10 @@
         </div>
         <div class="flex items-center justify-end">
           <button
-          @click="removeAll()"
+            @click="removeAll()"
             class="flex justify-center items-center gap-1.5 w-full py-2.5 rounded-xl text-[13px] font-medium text-muted border border-dark hover:border-bright hover:text-primary transition-all duration-200 no-underline"
           >
-            <TrashIcon class="size-4 -mt-0.5"/> Remove all tickets
+            <TrashIcon class="size-4 -mt-0.5" /> Remove all tickets
           </button>
         </div>
       </div>
@@ -98,7 +98,9 @@
           :key="'summary-' + item.invoiceItemId"
           class="flex justify-between text-[13.5px] mb-3"
         >
-          <span class="text-muted line-clamp-1 mr-2"> {{ item.timeTable?.movie?.title }} ({{ formatSeatLabel(item.seatNumber) }}) </span>
+          <span class="text-muted line-clamp-1 mr-2">
+            {{ item.timeTable?.movie?.title }} ({{ formatSeatLabel(item.seatNumber) }})
+          </span>
           <span class="text-primary shrink-0">{{ item.pricePerItem * item.count }} RSD</span>
         </div>
 
@@ -112,30 +114,12 @@
           <span class="text-muted">Booking Fee</span>
           <span>{{ bookingFee }} RSD</span>
         </div>
-        <div class="flex justify-between text-[14px] mb-4">
-          <span class="text-muted">Taxes (10%)</span>
-          <span>{{ taxAmount }} RSD</span>
-        </div>
 
         <div class="h-px bg-dark mb-4" />
 
         <div class="flex justify-between items-center text-[16px] font-bold mb-5">
           <span>Total</span>
           <span class="font-display text-[26px] text-gold tracking-wide">{{ grandTotal }} RSD</span>
-        </div>
-
-        <div class="flex gap-2 mb-5">
-          <input
-            v-model="promoCode"
-            placeholder="Promo code"
-            class="flex-1 bg-elevated border border-dark text-primary rounded-lg px-3 py-2 text-[13px] font-body outline-none focus:border-gold transition-colors duration-200 placeholder:text-dim"
-          />
-          <button
-            class="px-3 py-2 rounded-lg border border-dark text-[13px] font-medium text-muted hover:border-bright hover:text-primary transition-all duration-200 bg-elevated"
-            @click="applyPromo"
-          >
-            Apply
-          </button>
         </div>
 
         <button
@@ -172,20 +156,14 @@ import CinemaIcon from '@/components/icons/CinemaIcon.vue'
 import dayjs from 'dayjs'
 import CloseIcon from '@/components/icons/CloseIcon.vue'
 import TrashIcon from '@/components/icons/TrashIcon.vue'
+import { changeCheckoutAccess } from '@/router'
+import { formatSeatLabel } from '@/utils/seatNumber'
 
 const router = useRouter()
 
 const cartData = ref<any | null>(null)
-const promoCode = ref('')
 const loading = ref(true)
 const actionLoading = ref(false)
-
-function formatSeatLabel(seatNumber: number): string {
-  if (seatNumber === undefined || seatNumber === null) return ''
-  const row = String.fromCharCode(65 + Math.floor(seatNumber / 16))
-  const col = (seatNumber % 16) + 1
-  return `${row}${col}`
-}
 
 const itemCount = computed(() => {
   if (!cartData.value?.invoiceItems) return 0
@@ -201,12 +179,8 @@ const bookingFee = computed(() => {
   return itemCount.value > 0 ? 50 : 0
 })
 
-const taxAmount = computed(() => {
-  return Math.round(subtotal.value * 0.1 * 100) / 100
-})
-
 const grandTotal = computed(() => {
-  return subtotal.value + bookingFee.value + taxAmount.value
+  return subtotal.value + bookingFee.value
 })
 
 async function loadCart() {
@@ -219,7 +193,6 @@ async function loadCart() {
 
       const movieRequests = uniqueMovieIds.map((id: any) =>
         movieService.getMovieById(String(id)).catch((err) => {
-          console.error(`Failed to fetch metadata for movie ID ${id}:`, err)
           return null
         }),
       )
@@ -280,23 +253,25 @@ async function removeAll() {
   }
 }
 
-function applyPromo() {
-  console.log('Applying promo code:', promoCode.value)
-}
-
 async function handleCheckout() {
   try {
     actionLoading.value = true
 
-    const mockPurchaseId = 'PUR-' + Math.random().toString(36).substring(2, 9).toUpperCase()
+    const purchaseId = 'INV-' + Date.now()
     const payload = {
-      pursId: mockPurchaseId,
-      pursCounter: 'ONLINE_WEB_CLIENT',
+      purchaseId: purchaseId,
+      counterName: 'ONLINE_WEB_CLIENT',
     }
 
     await invoiceService.checkout(payload)
 
-    router.push('/')
+    window.dispatchEvent(new Event('cart-change'))
+
+    changeCheckoutAccess(true)
+    router.push({
+      path: '/checkout/success',
+      query: { id: purchaseId },
+    })
   } catch (err) {
     console.error('Checkout processing error occurred:', err)
   } finally {

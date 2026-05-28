@@ -83,9 +83,10 @@ import CartIcon from '../icons/CartIcon.vue'
 import LogInIcon from '../icons/LogInIcon.vue'
 import { authService } from '@/services/authService'
 import { invoiceService } from '@/services/invoiceService'
+import type { User } from '@/types/User'
 
 const isLoggedIn = ref(false)
-const user = ref<any | null>(null)
+const user = ref<User | null>(null)
 const cartItemsCount = ref<number>(0)
 
 const navLinks = [

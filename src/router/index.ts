@@ -12,6 +12,7 @@ import VerifyPage from '@/pages/VerifyPage.vue'
 import UserProfilePage from '@/pages/UserProfilePage.vue'
 import { authService } from '@/services/authService'
 import NotFoundPage from '@/pages/NotFoundPage.vue'
+import CheckoutSuccessPage from '@/pages/CheckoutSuccessPage.vue'
 
 const routes = [
   {
@@ -23,6 +24,12 @@ const routes = [
       { path: 'movie/:id', name: 'movie', component: MovieDetailsPage, meta: { layout: 'default' } },
       { path: 'cart', name: 'cart', component: CartPage, meta: { requiresAuth: true, layout: 'default' } },
       { path: 'profile', name: 'profile', component: UserProfilePage, meta: { requiresAuth: true, layout: 'default' } },
+      {
+        path: 'checkout/success',
+        name: 'checkout',
+        component: CheckoutSuccessPage,
+        meta: { requiresAuth: true, requiresCheckoutFlag: true, layout: 'default' },
+      },
     ],
   },
   {
@@ -47,6 +54,12 @@ const routes = [
   },
 ]
 
+let isCheckoutAllowed = false
+
+export function changeCheckoutAccess(flag: boolean) {
+  isCheckoutAllowed = flag
+}
+
 const router = createRouter({
   history: createWebHistory(),
   routes,
@@ -69,6 +82,12 @@ router.beforeEach((to) => {
 
   if (to.meta.requiresPendingEmail && !hasPendingEmail) {
     return { name: 'signup' }
+  }
+
+  if (to.meta.requiresCheckoutFlag) {
+    if (!isCheckoutAllowed) {
+      return { name: 'home' }
+    }
   }
 })
 

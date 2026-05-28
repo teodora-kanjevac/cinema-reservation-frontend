@@ -7,6 +7,7 @@
       :type="type"
       :value="modelValue"
       :placeholder="placeholder"
+      :autocomplete="autocomplete"
       @input="$emit('update:modelValue', ($event.target as HTMLInputElement).value)"
       class="bg-elevated border border-dark text-primary rounded-lg px-3.5 py-2.75 text-[14.5px] font-body outline-none focus:border-gold transition-all duration-200 placeholder:text-dim"
     />
@@ -20,11 +21,13 @@ withDefaults(
     modelValue?: string
     type?: string
     placeholder?: string
+    autocomplete?: string
   }>(),
   {
     type: 'text',
     modelValue: '',
     placeholder: '',
+    autocomplete: 'off',
   },
 )
 

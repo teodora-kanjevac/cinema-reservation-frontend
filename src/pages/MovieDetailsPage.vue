@@ -76,10 +76,17 @@
               <span>Book Tickets</span>
             </a>
             <button
-              class="inline-flex items-center gap-2 px-8 py-3.5 rounded-xl text-[15px] font-semibold text-primary bg-elevated border border-bright hover:border-gold hover:text-gold transition-all duration-200 cursor-pointer"
+              @click="toggleWishlist"
+              :disabled="isProcessing"
+              class="inline-flex items-center gap-2 px-8 py-3.5 rounded-xl text-[15px] font-semibold transition-all duration-200 cursor-pointer border"
+              :class="
+                isSaved
+                  ? 'bg-gold/10 border-gold text-gold hover:bg-gold/20'
+                  : 'text-primary bg-elevated border-bright hover:border-gold hover:text-gold'
+              "
             >
-              <HeartIcon class="size-4.5" />
-              <span>Wishlist</span>
+              <HeartIcon class="size-4.5" :class="{ 'fill-current': isSaved }" />
+              <span>{{ isSaved ? 'Saved to Wishlist' : 'Wishlist' }}</span>
             </button>
           </div>
         </div>
@@ -256,11 +263,16 @@ import type { CinemaScreenings, ScreeningDate, ScreeningSlot } from '@/types/Tim
 import { timeTableService } from '@/services/timeTableService'
 import NoScreeningIcon from '@/components/icons/NoScreeningIcon.vue'
 import { invoiceService } from '@/services/invoiceService'
+import { authService } from '@/services/authService'
+import { wishlistService } from '@/services/wishlistService'
 
 const route = useRoute()
 
 const movie = ref<Movie>()
 const loading = ref(true)
+
+const isSaved = ref(false)
+const isProcessing = ref(false)
 
 const screeningDates = ref<ScreeningDate[]>([])
 const screeningsLoading = ref(false)
@@ -285,6 +297,7 @@ const activeDate = computed<ScreeningDate | undefined>(() => screeningDates.valu
 onMounted(async () => {
   const id = route.params.id as string
   await Promise.all([fetchMovie(id), fetchScreenings(id)])
+  checkInitialWishlistState()
 })
 
 async function fetchMovie(id: string) {
@@ -307,6 +320,16 @@ async function fetchScreenings(id: string) {
     screeningDates.value = []
   } finally {
     screeningsLoading.value = false
+  }
+}
+
+async function checkInitialWishlistState() {
+  if (!authService.isAuthenticated()) return
+  try {
+    const data = await wishlistService.getWishlist()
+    isSaved.value = data.items.some((item) => item.movieId === Number(movie.value?.id))
+  } catch (err) {
+    console.error('Failed to verify initial wishlist state:', err)
   }
 }
 
@@ -335,6 +358,27 @@ async function selectSlot(cinema: CinemaScreenings, slot: ScreeningSlot) {
     console.error('Failed to load seat map:', err)
   } finally {
     seatMapLoading.value = false
+  }
+}
+
+async function toggleWishlist() {
+  if (!authService.isAuthenticated()) return
+
+  try {
+    isProcessing.value = true
+    const targetId = Number(movie.value?.id)
+
+    if (isSaved.value) {
+      await wishlistService.removeItem(targetId)
+      isSaved.value = false
+    } else {
+      await wishlistService.addItem(targetId)
+      isSaved.value = true
+    }
+  } catch (err) {
+    console.error('Could not change wishlist preference:', err)
+  } finally {
+    isProcessing.value = false
   }
 }
 
