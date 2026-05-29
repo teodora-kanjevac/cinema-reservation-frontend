@@ -20,17 +20,37 @@ const routes = [
     path: '/',
     component: DefaultLayout,
     children: [
-      { path: '', name: 'home', component: HomePage, meta: { layout: 'default' } },
-      { path: 'browse', name: 'browse', component: BrowsePage, meta: { layout: 'default' } },
-      { path: 'movie/:id', name: 'movie', component: MovieDetailsPage, meta: { layout: 'default' } },
-      { path: 'cart', name: 'cart', component: CartPage, meta: { requiresAuth: true, layout: 'default' } },
-      { path: 'profile', name: 'profile', component: UserProfilePage, meta: { requiresAuth: true, layout: 'default' } },
-      { path: 'admin', name: 'admin', component: AdminManagementPage, meta: { requiresAuth: true, layout: 'default' } },
+      { path: '', name: 'home', component: HomePage, meta: { layout: 'default', title: 'Cinema Reservation' } },
+      { path: 'browse', name: 'browse', component: BrowsePage, meta: { layout: 'default', title: 'Browse Movies' } },
+      {
+        path: 'movie/:id',
+        name: 'movie',
+        component: MovieDetailsPage,
+        meta: { layout: 'default', title: 'Movie Details' },
+      },
+      {
+        path: 'cart',
+        name: 'cart',
+        component: CartPage,
+        meta: { requiresAuth: true, layout: 'default', title: 'Your Cart' },
+      },
+      {
+        path: 'profile',
+        name: 'profile',
+        component: UserProfilePage,
+        meta: { requiresAuth: true, layout: 'default', title: 'Profile' },
+      },
+      {
+        path: 'admin',
+        name: 'admin',
+        component: AdminManagementPage,
+        meta: { requiresAuth: true, layout: 'default', title: 'Admin Panel' },
+      },
       {
         path: 'checkout/success',
         name: 'checkout',
         component: CheckoutSuccessPage,
-        meta: { requiresAuth: true, requiresCheckoutFlag: true, layout: 'default' },
+        meta: { requiresAuth: true, requiresCheckoutFlag: true, layout: 'default', title: 'Checkout Success' },
       },
     ],
   },
@@ -38,21 +58,31 @@ const routes = [
     path: '/auth',
     component: AuthLayout,
     children: [
-      { path: 'login', name: 'login', component: LoginPage, meta: { requiresGuest: true, layout: 'auth' } },
-      { path: 'signup', name: 'signup', component: SignupPage, meta: { requiresGuest: true, layout: 'auth' } },
+      {
+        path: 'login',
+        name: 'login',
+        component: LoginPage,
+        meta: { requiresGuest: true, layout: 'auth', title: 'Login' },
+      },
+      {
+        path: 'signup',
+        name: 'signup',
+        component: SignupPage,
+        meta: { requiresGuest: true, layout: 'auth', title: 'Sign Up' },
+      },
       {
         path: 'verify',
         name: 'verify',
         component: VerifyPage,
-        meta: { requiresGuest: true, requiresPendingEmail: true, layout: 'auth' },
+        meta: { requiresGuest: true, requiresPendingEmail: true, layout: 'auth', title: 'Verify Email' },
       },
     ],
   },
-
   {
     path: '/:pathMatch(.*)*',
     name: 'not-found',
     component: NotFoundPage,
+    meta: { title: '404 - Page Not Found' },
   },
 ]
 
@@ -71,6 +101,14 @@ const router = createRouter({
 })
 
 router.beforeEach((to) => {
+  const baseTitle = 'SnapSeat'
+
+  if (to.meta.title) {
+    document.title = `${to.meta.title} | ${baseTitle}`
+  } else {
+    document.title = baseTitle
+  }
+
   const isAuthenticated = authService.isAuthenticated()
   const hasPendingEmail = !!localStorage.getItem('pendingEmail')
 
